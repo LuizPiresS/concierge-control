@@ -1,0 +1,83 @@
+services:
+  app:
+    build: .
+    entrypoint: .docker/entrypoint.sh
+    container_name: ${CONTAINER_NAME}-app
+    ports:
+      - '${APP_PORT}:3000'
+      - '5555:5555'
+      - '9229:9229'
+    volumes:
+      - .:/home/node/app
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=${DB_SCHEMA}
+      - REDIS_HOST=${REDIS_HOST}
+    depends_on:
+      - db
+      - redis
+      - localstack
+    networks:
+      - app-network
+
+  db:
+    build: .docker/postgres
+    container_name: ${CONTAINER_NAME}-db
+    restart: always
+    tty: true
+    ports:
+      - '${DB_PORT}:5432'
+    volumes:
+      - .docker/postgres/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    networks:
+      - app-network
+
+  redis:
+    container_name: ${CONTAINER_NAME}-redis
+    image: redis:alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - .:/home/node/app
+    networks:
+      - app-network
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: ${CONTAINER_NAME}-localstack
+    ports:
+      - '4566:4566' # Porta principal do LocalStack para todos os serviços
+      - '4510-4559:4510-4559' # Portas para serviços específicos
+    environment:
+      - SERVICES=s3,sns,sqs,location,secretsmanager # Serviços AWS que você deseja emular
+      - DEBUG=1 # Ativar logs de depuração
+      - DATA_DIR=/var/lib/localstack # Diretório para dados persistentes
+      - PERSISTENCE=1 # Habilitar persistência de dados
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_DEFAULT_REGION=us-east-1
+      - EDGE_PORT=4566
+      - LAMBDA_EXECUTOR=docker
+      - LAMBDA_REMOTE_DOCKER=false
+      - LAMBDA_RUNTIME_EXECUTOR=docker
+      - HOST_TMP_FOLDER=/tmp/localstack
+    volumes:
+      - 'localstack_data:/var/lib/localstack' # Dados persistentes
+      - '/var/run/docker.sock:/var/run/docker.sock' # Acesso ao Docker
+      - './scripts/localstack:/docker-entrypoint-initaws.d' # Scripts de inicialização
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4566/_localstack/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  localstack_data:
+
+networks:
+  app-network:
+    driver: bridge
