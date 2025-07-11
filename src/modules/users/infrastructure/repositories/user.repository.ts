@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient, User } from '@prisma/client';
 
-import { GenericRepository } from '../../../../infrastructure/database/prisma/repositories/generic-repository/generic-repository';
+import { GenericRepository } from '../../../../infrastructure/database/prisma/repositories/generic-repository/generic.repository';
 import { IUserRepository } from './user.repository.interface';
 
 export const USER_REPOSITORY_TOKEN = Symbol('IUserRepository');
