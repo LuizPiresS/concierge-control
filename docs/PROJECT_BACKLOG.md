@@ -10,8 +10,8 @@
 
 *Antes de começar o desenvolvimento, é crucial ter o laboratório pronto.*
 
-- [ ] **Tarefa 0.1 (Software):** Instalar todas as ferramentas na estação de trabalho (VS Code, Node.js, Docker, Postman, Android Studio).
-- [ ] **Tarefa 0.2 (Infra):** Configurar o roteador Wi-Fi e garantir que o computador de desenvolvimento consiga se conectar a ele.
+- [x] **Tarefa 0.1 (Software):** Instalar todas as ferramentas na estação de trabalho (VS Code, Node.js, Docker, Postman, Android Studio).
+- [x] **Tarefa 0.2 (Infra):** Configurar o roteador Wi-Fi e garantir que o computador de desenvolvimento consiga se conectar a ele.
 - [ ] **Tarefa 0.3 (Hardware):** Adquirir todos os componentes listados no `LABORATORY_SETUP.md` (ESP32, relés, sensores, fontes, etc.).
 - [ ] **Tarefa 0.4 (Bancada):** Montar fisicamente as bancadas de teste para o interfone e para os armários inteligentes.
 
@@ -22,9 +22,9 @@
 **Objetivo:** Criar o núcleo do sistema onde os usuários podem ser cadastrados e autenticados.
 
 ### Backend (NestJS)
-- [ ] **Tarefa 1.1:** Iniciar o projeto NestJS, configurar ESLint, Prettier e a conexão com o Prisma.
-- [ ] **Tarefa 1.2:** Modelar o schema do banco de dados no Prisma (`User`, `Unit`, `Role`).
-- [ ] **Tarefa 1.3:** Implementar o endpoint de registro de usuário (`POST /auth/register`).
+- [x] **Tarefa 1.1:** Iniciar o projeto NestJS, configurar ESLint, Prettier e a conexão com o Prisma.
+- [x] **Tarefa 1.2:** Modelar o schema do banco de dados no Prisma (`User`, `Unit`, `Role`).
+- [x] **Tarefa 1.3:** Implementar o endpoint de registro de usuário (`POST /auth/register`).
 - [ ] **Tarefa 1.4:** Implementar o endpoint de login (`POST /auth/login`) com geração de token JWT.
 - [ ] **Tarefa 1.5:** Criar um endpoint protegido para buscar dados do usuário logado (`GET /users/me`).
 

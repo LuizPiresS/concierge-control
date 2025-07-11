@@ -1,2 +1,3 @@
 #!/usr/bin/env sh
+echo "Executando checagens de pre-push... (lint, test, build, coverage)"
 npx lint-staged

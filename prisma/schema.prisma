@@ -1,7 +1,7 @@
 generator client {
   provider        = "prisma-client-js"
   binaryTargets   = ["native", "debian-openssl-3.0.x"]
-  previewFeatures = ["multiSchema", "fullTextSearchPostgres"]
+  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
@@ -15,6 +15,7 @@ model User {
   email     String   @unique
   password  String
   isDeleted Boolean  @default(false)
+  isActive  Boolean  @default(false)
   profile   Profile?
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -32,13 +33,12 @@ model Profile {
   street                 String
   number                 String
   neighborhood           String
-  latitude               Float?
-  longitude              Float?
   dueDate                String   @map("due_date")
   billingEmail           String   @map("billing_email")
   userId                 String   @unique @db.Uuid
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   updatedAt              DateTime @default(now()) @updatedAt @map("updated_at")
 
+  @@index([userId], name: "idx_user_id")
   @@map("profiles")
 }
