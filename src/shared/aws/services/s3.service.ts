@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
   DeleteObjectCommand,
-  ListObjectsV2Command,
+  GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+  S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -66,7 +66,15 @@ export class S3Service {
   /**
    * Faz upload de um arquivo para o S3
    */
-  async uploadFile(options: UploadFileOptions): Promise<string> {
+  /**
+   * Faz upload de um arquivo para o S3
+   */
+  async uploadFile(options: UploadFileOptions): Promise<{
+    url: string;
+    key: string;
+    bucket: string;
+    eTag?: string;
+  }> {
     const bucket = options.bucket || this.defaultBucket;
     const command = new PutObjectCommand({
       Bucket: bucket,
@@ -77,13 +85,28 @@ export class S3Service {
     });
 
     try {
-      await this.s3Client.send(command);
+      // 1. Captura a resposta do S3
+      const response = await this.s3Client.send(command);
       this.logger.log(`File uploaded successfully: ${bucket}/${options.key}`);
-      // Retorna a URL pública padrão do S3 (ajuste se usar domínio customizado)
-      return `https://${bucket}.s3.amazonaws.com/${options.key}`;
+
+      // 2. Constrói a URL de forma mais robusta, obtendo a região do cliente.
+      //    Isso ainda assume acesso público, mas é menos frágil que a versão anterior.
+      const region = await this.s3Client.config.region();
+      const url = `https://${bucket}.s3.${region}.amazonaws.com/${options.key}`;
+
+      // 3. Retorna um objeto estruturado com informações valiosas.
+      return {
+        url,
+        key: options.key,
+        bucket,
+        eTag: response.ETag,
+      };
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
       this.logger.error(
-        `Failed to upload file ${options.key}: ${(error as Error)?.message ?? String(error)}`,
+        `Failed to upload file ${options.key}: ${errorMessage}`,
       );
       throw error;
     }
@@ -113,8 +136,12 @@ export class S3Service {
       this.logger.log(`File downloaded successfully: ${bucket}/${options.key}`);
       return buffer;
     } catch (error) {
+      // By checking `instanceof Error`, TypeScript knows `error.message` is safe to access.
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
       this.logger.error(
-        `Failed to download file ${options.key}: ${(error as Error)?.message ?? String(error)}`,
+        `Failed to download file ${options.key}: ${errorMessage}`,
       );
       throw error;
     }
@@ -135,8 +162,11 @@ export class S3Service {
       this.logger.log(`File deleted successfully: ${bucket}/${options.key}`);
       return true;
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
       this.logger.error(
-        `Falha ao deletar o arquivo ${options.key}: ${(error as Error)?.message ?? String(error)}`,
+        `Failed to delete file ${options.key}: ${errorMessage}`,
       );
       throw error;
     }
@@ -187,11 +217,17 @@ export class S3Service {
       const response = await this.s3Client.send(command);
       const files =
         response.Contents?.map((obj) => obj.Key).filter(Boolean) || [];
-      this.logger.log(`Listed ${files.length} files in bucket ${bucket}`);
+      this.logger.log(
+        `Listed ${String(files.length)} files in bucket ${bucket}`,
+      );
       return files as string[];
     } catch (error) {
+      // By checking `instanceof Error`, TypeScript knows `error.message` is safe to access.
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
       this.logger.error(
-        `Falha ao listar arquivos no bucket ${bucket}: ${(error as Error)?.message ?? String(error)}`,
+        `Falha ao listar arquivos no bucket ${bucket}: ${errorMessage}`,
       );
       throw error;
     }
@@ -215,8 +251,10 @@ export class S3Service {
       this.logger.log(`Generated presigned upload URL for ${bucket}/${key}`);
       return url;
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Falha ao gerar URL de upload pré-assinado: ${(error as Error)?.message ?? String(error)}`,
+        `Falha ao gerar URL de upload pré-assinado: ${errorMessage}`,
       );
       throw error;
     }
@@ -240,8 +278,11 @@ export class S3Service {
       this.logger.log(`Generated presigned download URL for ${bucket}/${key}`);
       return url;
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
       this.logger.error(
-        `Falha ao gerar URL de download pré-assinado: ${(error as Error)?.message ?? String(error)}`,
+        `Falha ao gerar URL de download pré-assinado: ${errorMessage}`,
       );
       throw error;
     }
@@ -262,7 +303,8 @@ export class S3Service {
     const ext = getExtensionFromContentType(contentType);
     const key = `profiles/${userId}/photo.${ext}`;
 
-    return this.uploadFile({
+    // CORRIGIDO: Aguarda o resultado do upload e extrai a URL.
+    const uploadResult = await this.uploadFile({
       bucket,
       key,
       body: file,
@@ -272,6 +314,8 @@ export class S3Service {
         uploadedAt: new Date().toISOString(),
       },
     });
+
+    return uploadResult.url;
   }
 
   /**
@@ -288,9 +332,10 @@ export class S3Service {
       'protect-sys-documents',
     );
     const ext = getExtensionFromContentType(contentType);
-    const key = `documents/${tenantId}/${documentType}/${Date.now()}.${ext}`;
+    const key = `documents/${tenantId}/${documentType}/${String(Date.now())}.${ext}`;
 
-    return this.uploadFile({
+    // CORRIGIDO: Aguarda o resultado do upload e extrai a URL.
+    const uploadResult = await this.uploadFile({
       bucket,
       key,
       body: file,
@@ -301,5 +346,7 @@ export class S3Service {
         uploadedAt: new Date().toISOString(),
       },
     });
+
+    return uploadResult.url;
   }
 }

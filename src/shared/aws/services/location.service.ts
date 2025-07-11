@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
-  LocationClient,
-  SearchPlaceIndexForTextCommand,
-  SearchPlaceIndexForPositionCommand,
   CreatePlaceIndexCommand,
-  ListPlaceIndexesCommand,
-  DescribePlaceIndexCommand,
   DeletePlaceIndexCommand,
+  DescribePlaceIndexCommand,
+  ListPlaceIndexesCommand,
+  LocationClient,
+  SearchPlaceIndexForPositionCommand,
+  SearchPlaceIndexForTextCommand,
 } from '@aws-sdk/client-location';
 
 export interface GeocodingResult {
@@ -98,7 +98,7 @@ export class LocationService {
       );
 
       this.logger.log(
-        `Geocoded address "${address}" - found ${results.length} results`,
+        `Geocoded address "${address}" - found ${String(results.length)} results`,
       );
       return results;
     } catch (error) {
@@ -128,13 +128,13 @@ export class LocationService {
       );
 
       this.logger.log(
-        `Reverse geocoded coordinates [${lat}, ${lng}] - found ${results.length} results`,
+        `Reverse geocoded coordinates [${String(lat)}, ${String(lng)}] - found ${String(results.length)} results`,
       );
       return results;
     } catch (error) {
       this._logAndThrow(
         error,
-        `Failed to reverse geocode coordinates [${lat}, ${lng}]`,
+        `Failed to reverse geocode coordinates [${String(lat)}, ${String(lng)}]`,
       );
     }
   }
@@ -174,7 +174,7 @@ export class LocationService {
       const response = await this.locationClient.send(command);
       const indexes =
         response.Entries?.map((entry) => entry.IndexName).filter(Boolean) || [];
-      this.logger.log(`Listed ${indexes.length} place indexes`);
+      this.logger.log(`Listed ${String(indexes.length)} place indexes`);
       return indexes as string[];
     } catch (error) {
       this._logAndThrow(error, 'Failed to list place indexes');
