@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { IUserRepository } from '../../../infrastructure/repositories/user.repository.interface';
+import { IUserRepository } from '../../../domain/repositories/user.repository.interface';
 import { USER_REPOSITORY_TOKEN } from '../../../infrastructure/repositories/user.repository';
 import { ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';

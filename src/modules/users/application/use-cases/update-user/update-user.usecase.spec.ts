@@ -4,7 +4,7 @@ import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 import { USER_REPOSITORY_TOKEN } from '../../../infrastructure/repositories/user.repository';
-import { IUserRepository } from '../../../infrastructure/repositories/user.repository.interface';
+import { IUserRepository } from '../../../domain/repositories/user.repository.interface';
 import { UserMapper } from '../../mappers/user.mapper';
 import { UpdateUserUseCase } from './update-user.usecase';
 

@@ -2,7 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
 
 import { USER_REPOSITORY_TOKEN } from '../../../infrastructure/repositories/user.repository';
-import { IUserRepository } from '../../../infrastructure/repositories/user.repository.interface';
+import { IUserRepository } from '../../../domain/repositories/user.repository.interface';
 
 @Injectable()
 export class FindUserByEmailUseCase {

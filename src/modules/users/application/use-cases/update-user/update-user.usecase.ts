@@ -3,7 +3,7 @@ import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { IUseCase } from '../../../../../shared/domain/use-case.interface';
 import { USER_REPOSITORY_TOKEN } from '../../../infrastructure/repositories/user.repository';
-import { IUserRepository } from '../../../infrastructure/repositories/user.repository.interface';
+import { IUserRepository } from '../../../domain/repositories/user.repository.interface';
 import { UpdateUserDto } from '../../../presentation/http/dtos/update-user.dto';
 import { UserMapper } from '../../mappers/user.mapper';
 

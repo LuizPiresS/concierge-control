@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { USER_REPOSITORY_TOKEN } from '../../../infrastructure/repositories/user.repository';
-import { IUserRepository } from '../../../infrastructure/repositories/user.repository.interface';
+import { IUserRepository } from '../../../domain/repositories/user.repository.interface';
 import { IUseCase } from '../../../../../shared/domain/use-case.interface';
 
 // Esta definição está 100% correta com a nova interface

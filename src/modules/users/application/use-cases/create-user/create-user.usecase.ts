@@ -1,9 +1,7 @@
-// src/modules/users/application/use-cases/create-user/create-user.use-case.ts
-
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { USER_REPOSITORY_TOKEN } from '../../../infrastructure/repositories/user.repository';
-import { IUserRepository } from '../../../infrastructure/repositories/user.repository.interface';
+import { IUserRepository } from '../../../domain/repositories/user.repository.interface';
 import { CreateUserDto } from '../../../presentation/http/dtos/create-user.dto';
 import { User } from '@prisma/client';
 import { IUseCase } from '../../../../../shared/domain/use-case.interface';

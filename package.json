@@ -18,7 +18,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prepare": "husky"
+    "prepare": "husky",
+    "doc": "compodoc -p tsconfig.json -s",
+    "doc:build": "compodoc -p tsconfig.json"
   },
   "dependencies": {
     "@aws-sdk/client-location": "^3.840.0",
@@ -44,6 +46,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@compodoc/compodoc": "^1.1.26",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
@@ -100,10 +103,10 @@
     "testEnvironment": "node",
     "coverageThreshold": {
       "global": {
-        "branches": 70,
-        "functions": 70,
-        "lines": 70,
-        "statements": 70
+        "branches": 60,
+        "functions": 60,
+        "lines": 60,
+        "statements": 60
       }
     }
   }

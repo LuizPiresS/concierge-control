@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { IUseCase } from '../../../../../shared/domain/use-case.interface';
 import { USER_REPOSITORY_TOKEN } from '../../../infrastructure/repositories/user.repository';
-import { IUserRepository } from '../../../infrastructure/repositories/user.repository.interface';
+import { IUserRepository } from '../../../domain/repositories/user.repository.interface';
 
 type RemoveUserRequest = string; // A entrada é o ID
 type RemoveUserResponse = boolean; // A saída é vazia
