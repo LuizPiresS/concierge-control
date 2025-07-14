@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserController } from './users.controller';
+import { UsersController } from './users.controller';
 import { UserService } from '../../../application/services/users.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { UpdateUserDto } from '../dtos/update-user.dto';
@@ -25,7 +25,7 @@ const mockUserService = {
 };
 
 describe('UserController', () => {
-  let controller: UserController;
+  let controller: UsersController;
   let service: UserService;
 
   beforeEach(async () => {
@@ -33,7 +33,7 @@ describe('UserController', () => {
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [UserController],
+      controllers: [UsersController],
       // Provide the mock service instead of the real one
       providers: [
         {
@@ -43,7 +43,7 @@ describe('UserController', () => {
       ],
     }).compile();
 
-    controller = module.get<UserController>(UserController);
+    controller = module.get<UsersController>(UsersController);
     service = module.get<UserService>(UserService);
   });
 
