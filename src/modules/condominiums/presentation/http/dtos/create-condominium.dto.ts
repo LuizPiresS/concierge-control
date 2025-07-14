@@ -1,9 +1,16 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Length,
+} from 'class-validator';
 
 export class CreateCondominiumDto {
   @ApiProperty({
-    description: 'The name of the condominium.',
+    description: 'The trade name of the condominium.',
     example: 'Residencial Jardins',
   })
   @IsString()
@@ -22,11 +29,110 @@ export class CreateCondominiumDto {
   @Length(14, 14)
   cnpj: string;
 
+  // --- Detailed Address ---
   @ApiProperty({
-    description: 'The full address of the condominium.',
-    example: 'Rua das Flores, 123, Bairro Feliz, Cidade Exemplo - SP',
+    description: 'The street name of the condominium address.',
+    example: 'Rua das Flores',
   })
   @IsString()
   @IsNotEmpty()
-  address: string;
+  street: string;
+
+  @ApiProperty({
+    description: 'The number of the condominium address.',
+    example: '123',
+  })
+  @IsString()
+  @IsNotEmpty()
+  number: string;
+
+  @ApiPropertyOptional({
+    description: 'Additional address information (e.g., block, suite, floor).',
+    example: 'Bloco C, Apto 101',
+  })
+  @IsString()
+  @IsOptional()
+  complement?: string;
+
+  @ApiProperty({
+    description: 'The neighborhood of the condominium address.',
+    example: 'Bairro Feliz',
+  })
+  @IsString()
+  @IsNotEmpty()
+  neighborhood: string;
+
+  @ApiProperty({
+    description: 'The city of the condominium address.',
+    example: 'Cidade Exemplo',
+  })
+  @IsString()
+  @IsNotEmpty()
+  city: string;
+
+  @ApiProperty({
+    description: 'The state (UF) of the condominium address.',
+    example: 'SP',
+    minLength: 2,
+    maxLength: 2,
+  })
+  @IsString()
+  @IsNotEmpty()
+  @Length(2, 2)
+  state: string;
+
+  @ApiProperty({
+    description:
+      'The ZIP code of the condominium address, containing only numbers.',
+    example: '12345678',
+    minLength: 8,
+    maxLength: 8,
+  })
+  @IsString()
+  @IsNotEmpty()
+  @Length(8, 8)
+  zipCode: string;
+
+  // --- Contact Information ---
+  @ApiPropertyOptional({
+    description: 'The main contact phone number for the condominium.',
+    example: '11987654321',
+  })
+  @IsString()
+  @IsOptional()
+  phone?: string;
+
+  @ApiPropertyOptional({
+    description: 'The main contact email for the condominium.',
+    example: 'contato@residencialjardins.com',
+  })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  // --- Tax Information ---
+  @ApiPropertyOptional({
+    description: 'The state registration number (Inscrição Estadual).',
+    example: '111.222.333.444',
+  })
+  @IsString()
+  @IsOptional()
+  stateRegistration?: string;
+
+  @ApiPropertyOptional({
+    description: 'The municipal registration number (Inscrição Municipal).',
+    example: '555666777',
+  })
+  @IsString()
+  @IsOptional()
+  municipalRegistration?: string;
+
+  // --- Other ---
+  @ApiPropertyOptional({
+    description: 'A URL for the condominium logo.',
+    example: 'https://example.com/logo.png',
+  })
+  @IsUrl()
+  @IsOptional()
+  logoUrl?: string;
 }

@@ -44,13 +44,33 @@ model Profile {
 }
 
 model Condominium {
-  id      String @id @default(uuid()) @db.Uuid
-  name    String
-  cnpj    String @unique
-  address String
+  id   String @id @default(uuid()) @db.Uuid
+  name String // Nome Fantasia do condomínio
+  cnpj String @unique
 
+  // --- Endereço Detalhado ---
+  street       String // Logradouro (Rua, Avenida, etc.)
+  number       String // Número do estabelecimento
+  complement   String? // Complemento (Bloco, Sala, Andar). Opcional.
+  neighborhood String // Bairro
+  city         String // Cidade
+  state        String // Estado (UF, ex: "SP")
+  zipCode      String  @map("zip_code") // CEP
+
+  // --- Informações de Contato ---
+  phone String? // Telefone principal de contato. Opcional.
+  email String? @unique // E-mail principal de contato. Opcional e único.
+
+  // --- Inscrições Fiscais (Opcionais) ---
+  stateRegistration     String? @unique @map("state_registration") // Inscrição Estadual
+  municipalRegistration String? @unique @map("municipal_registration") // Inscrição Municipal
+
+  // --- Outros ---
+  logoUrl String? @map("logo_url") // URL para a logomarca do condomínio
+
+  // --- Campos de Controle ---
   isDeleted Boolean @default(false)
-  isActive  Boolean @default(false)
+  isActive  Boolean @default(true) // Faz mais sentido um novo registro começar ativo
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
