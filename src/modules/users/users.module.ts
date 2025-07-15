@@ -33,6 +33,6 @@ import { PrismaModule } from '../../infrastructure/database/prisma/prisma.module
       useClass: UserRepository,
     },
   ],
-  exports: [UserService],
+  exports: [UserService, CreateUserUseCase],
 })
 export class UsersModule {}

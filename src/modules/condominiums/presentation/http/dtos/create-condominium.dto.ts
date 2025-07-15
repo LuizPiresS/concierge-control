@@ -26,8 +26,21 @@ export class CreateCondominiumDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Length(14, 14)
+  @Length(14, 14, { message: 'O CNPJ deve ter exatamente 14 caracteres.' })
   cnpj: string;
+
+  // --- Manager User Information (New Required Field) ---
+  @ApiProperty({
+    description:
+      "The email address for the condominium's initial manager (síndico). This user will be created automatically.",
+    example: 'sindico.jardins@example.com',
+  })
+  @IsEmail(
+    {},
+    { message: 'Por favor, forneça um email válido para o síndico.' },
+  )
+  @IsNotEmpty({ message: 'O email do síndico não pode estar vazio.' })
+  managerEmail: string;
 
   // --- Detailed Address ---
   @ApiProperty({
@@ -78,7 +91,7 @@ export class CreateCondominiumDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Length(2, 2)
+  @Length(2, 2, { message: 'O estado (UF) deve ter exatamente 2 caracteres.' })
   state: string;
 
   @ApiProperty({
@@ -90,7 +103,7 @@ export class CreateCondominiumDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Length(8, 8)
+  @Length(8, 8, { message: 'O CEP deve ter exatamente 8 caracteres.' })
   zipCode: string;
 
   // --- Contact Information ---

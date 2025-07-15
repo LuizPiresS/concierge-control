@@ -15,6 +15,7 @@ const mockUser: User = {
   updatedAt: new Date(),
   isDeleted: false,
   isActive: true,
+  condominiumId: 'a-valid-uuid',
 };
 
 describe('RemoveUserUseCase', () => {

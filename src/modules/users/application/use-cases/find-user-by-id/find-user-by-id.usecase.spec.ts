@@ -49,6 +49,7 @@ describe('FindUserByIdUseCase', () => {
         updatedAt: new Date(),
         isDeleted: false,
         isActive: false,
+        condominiumId: 'a-valid-uuid',
       };
 
       // Mock the repository to return the user

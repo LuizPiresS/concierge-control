@@ -66,6 +66,11 @@ describe('GenericRepository', () => {
       const createInput: UserCreateInput = {
         email: 'test@example.com',
         password: 'password123',
+        condominium: {
+          create: undefined,
+          connectOrCreate: undefined,
+          connect: undefined,
+        },
       };
 
       prismaMock.user.create.mockResolvedValue(mockUser as any);

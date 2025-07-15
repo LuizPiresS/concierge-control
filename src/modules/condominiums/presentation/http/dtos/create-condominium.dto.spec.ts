@@ -7,6 +7,7 @@ describe('CreateCondominiumDto', () => {
     const dto = new CreateCondominiumDto();
     dto.name = 'Residencial Jardins';
     dto.cnpj = '12345678000190';
+    dto.managerEmail = 'sindico.valido@example.com';
     dto.street = 'Rua das Flores';
     dto.number = '123';
     dto.neighborhood = 'Bairro Feliz';
@@ -18,6 +19,7 @@ describe('CreateCondominiumDto', () => {
 
   it('should pass validation with all required fields and valid data', async () => {
     const dto = createValidDto();
+
     const errors = await validate(dto);
     expect(errors.length).toBe(0);
   });
@@ -25,6 +27,7 @@ describe('CreateCondominiumDto', () => {
   it('should pass validation with all fields (required and optional) filled correctly', async () => {
     const dto = createValidDto();
     dto.complement = 'Bloco C, Apto 101';
+
     dto.phone = '11987654321';
     dto.email = 'contato@residencialjardins.com';
     dto.stateRegistration = '111.222.333.444';
@@ -68,6 +71,34 @@ describe('CreateCondominiumDto', () => {
       const errors = await validate(dto);
       expect(errors.length).toBeGreaterThan(0);
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+  });
+
+  describe('managerEmail', () => {
+    it('should fail if managerEmail is not a valid email', async () => {
+      const dto = createValidDto();
+      dto.managerEmail = 'not-a-valid-email'; // Invalid format
+      const errors = await validate(dto);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors[0].property).toBe('managerEmail');
+      expect(errors[0].constraints).toHaveProperty('isEmail');
+    });
+
+    it('should fail if managerEmail is empty', async () => {
+      const dto = createValidDto();
+      dto.managerEmail = ''; // Invalid value
+      const errors = await validate(dto);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors[0].property).toBe('managerEmail');
+      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+    });
+
+    it('should fail if managerEmail is not provided', async () => {
+      const dto = createValidDto();
+      dto.managerEmail = 'undefined'; // Missing required field
+      const errors = await validate(dto);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors[0].property).toBe('managerEmail');
     });
   });
 
@@ -129,17 +160,24 @@ describe('CreateCondominiumDto', () => {
   it('should report multiple errors for multiple invalid fields', async () => {
     const dto = new CreateCondominiumDto(); // Start with an empty DTO
     dto.name = ''; // isNotEmpty fails
-    dto.cnpj = '123'; // isLength fails
+    dto.cnpj = '123'; // isLength (and isNotEmpty) fails
+    dto.managerEmail = 'invalid'; // isEmail fails
     dto.state = 'S'; // isLength fails
-    dto.email = 'invalid'; // isEmail fails
+    dto.email = 'invalid-optional-email'; // isEmail (on optional field) fails
 
     const errors = await validate(dto);
-    // Expect errors for name, cnpj, street, number, neighborhood, city, state, zipCode, and email
-    expect(errors.length).toBe(9);
+    // Expect errors for all required fields that are missing or invalid,
+    // plus any optional fields that are invalid.
+    // Missing required: street, number, neighborhood, city, zipCode (5 errors)
+    // Invalid required: name, cnpj, managerEmail, state (4 errors)
+    // Invalid optional: email (1 error)
+    // Total: 10 errors
+    expect(errors.length).toBe(10);
 
     const errorProperties = errors.map((err) => err.property);
     expect(errorProperties).toContain('name');
     expect(errorProperties).toContain('cnpj');
+    expect(errorProperties).toContain('managerEmail');
     expect(errorProperties).toContain('street');
     expect(errorProperties).toContain('number');
     expect(errorProperties).toContain('neighborhood');

@@ -1,6 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CondominiumService } from '../../../application/services/condominium.service';
+import { CreateCondominiumResponseDto } from '../dtos/create-condominium-response.dto';
 import { CreateCondominiumDto } from '../dtos/create-condominium.dto';
 
 @ApiTags('condominiums')
@@ -13,6 +14,7 @@ export class CondominiumController {
   @ApiOperation({ summary: 'Creates a new condominium' })
   @ApiResponse({
     status: 201,
+    type: CreateCondominiumResponseDto,
     description: 'The condominium was created successfully.',
   })
   @ApiResponse({ status: 400, description: 'Invalid parameters.' })

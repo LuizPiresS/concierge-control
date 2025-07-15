@@ -18,9 +18,18 @@ model User {
   isActive  Boolean  @default(false)
   profile   Profile?
 
+  // --- RELAÇÃO ADICIONADA ---
+  // Campo para armazenar o ID do condomínio ao qual o usuário pertence.
+  condominiumId String      @db.Uuid
+  // Campo de relação que conecta este usuário a uma instância de Condominium.
+  condominium   Condominium @relation(fields: [condominiumId], references: [id], onDelete: Cascade)
+  // --- FIM DA RELAÇÃO ---
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  // Adiciona um índice na chave estrangeira para otimizar as buscas.
+  @@index([condominiumId])
   @@map("users")
 }
 
@@ -67,6 +76,11 @@ model Condominium {
 
   // --- Outros ---
   logoUrl String? @map("logo_url") // URL para a logomarca do condomínio
+
+  // --- RELAÇÃO ADICIONADA ---
+  // Campo de relação que permite acessar a lista de usuários deste condomínio.
+  users User[]
+  // --- FIM DA RELAÇÃO ---
 
   // --- Campos de Controle ---
   isDeleted Boolean @default(false)

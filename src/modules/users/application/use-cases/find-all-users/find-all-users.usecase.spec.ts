@@ -49,6 +49,7 @@ describe('FindAllUsersUseCase', () => {
           updatedAt: new Date(),
           isActive: true,
           isDeleted: false,
+          condominiumId: 'a-valid-uuid',
         },
         {
           id: '2',
@@ -58,6 +59,7 @@ describe('FindAllUsersUseCase', () => {
           updatedAt: new Date(),
           isActive: false,
           isDeleted: true,
+          condominiumId: 'a-valid-uuid',
         },
       ];
       (repository.findMany as jest.Mock).mockResolvedValue(mockUsers);

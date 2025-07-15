@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Condominium } from '@prisma/client';
-import { CreateCondominiumUseCase } from '../use-cases/create-condominium/create-condominium.usecase';
+import {
+  CreateCondominiumUseCase,
+  CreateCondominiumResponse,
+} from '../use-cases/create-condominium/create-condominium.usecase';
 import { CreateCondominiumDto } from '../../presentation/http/dtos/create-condominium.dto';
 import { CondominiumService } from './condominium.service';
 
@@ -13,6 +16,7 @@ const mockCreateCondominiumUseCase = {
 const validCreateDto: CreateCondominiumDto = {
   name: 'Residencial Jardins',
   cnpj: '12345678000190',
+  managerEmail: 'sindico@jardins.com',
   street: 'Rua das Flores',
   number: '123',
   neighborhood: 'Bairro Feliz',
@@ -85,7 +89,10 @@ describe('CondominiumService', () => {
     it('should call the CreateCondominiumUseCase with the correct parameters and return its result', async () => {
       // Arrange
       const createDto = { ...validCreateDto };
-      const expectedResult = { ...mockCondominiumEntity };
+      const expectedResult: CreateCondominiumResponse = {
+        condominium: mockCondominiumEntity,
+        managerInitialPassword: 'mock-password-123',
+      };
 
       // Configura o mock para simular o sucesso do caso de uso
       createCondominiumUseCase.execute.mockResolvedValue(expectedResult);

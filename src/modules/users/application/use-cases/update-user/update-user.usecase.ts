@@ -1,17 +1,19 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+
 import { IUseCase } from '../../../../../shared/domain/use-case.interface';
-import { USER_REPOSITORY_TOKEN } from '../../../infrastructure/repositories/user.repository';
 import { IUserRepository } from '../../../domain/repositories/user.repository.interface';
+import { USER_REPOSITORY_TOKEN } from '../../../infrastructure/repositories/user.repository';
 import { UpdateUserDto } from '../../../presentation/http/dtos/update-user.dto';
 import { UserMapper } from '../../mappers/user.mapper';
 
-// Agrupamos 'id' e 'dto' em um único objeto de request
+// Tipos explícitos para a requisição e resposta do caso de uso
 type UpdateUserRequest = {
   id: string;
   dto: UpdateUserDto;
 };
+
 type UpdateUserResponse = Omit<User, 'password'>;
 
 @Injectable()
@@ -26,21 +28,19 @@ export class UpdateUserUseCase
     private readonly userMapper: UserMapper,
   ) {}
 
-  private excludePassword(user: User): UpdateUserResponse {
-    const { password: _password, ...result } = user;
-    return result;
-  }
-
   async execute(request: UpdateUserRequest): Promise<UpdateUserResponse> {
-    const { id, dto } = request;
-
-    const userExists = await this.userRepository.findByUnique({ id });
-    if (!userExists) {
-      throw new NotFoundException(`Usuário com ID ${id} não encontrado.`);
+    // 1. Garante que o usuário existe
+    const existingUser = await this.userRepository.findByUnique({
+      id: request.id,
+    });
+    if (!existingUser) {
+      throw new NotFoundException(
+        `Usuário com ID ${request.id} não encontrado.`,
+      );
     }
 
-    const dataToUpdate = this.userMapper.updateDtoToUpdateInput(dto);
-
+    // 2. Mapeia o DTO para o formato de atualização e hasheia a senha se necessário
+    const dataToUpdate = this.userMapper.updateDtoToUpdateInput(request.dto);
     if (dataToUpdate.password && typeof dataToUpdate.password === 'string') {
       dataToUpdate.password = await bcrypt.hash(
         dataToUpdate.password,
@@ -48,8 +48,12 @@ export class UpdateUserUseCase
       );
     }
 
-    const updatedUser = await this.userRepository.update({ id }, dataToUpdate);
+    // 3. Atualiza o usuário e usa o mapper para retornar um objeto seguro
+    const updatedUser = await this.userRepository.update(
+      { id: request.id },
+      dataToUpdate,
+    );
 
-    return this.excludePassword(updatedUser);
+    return this.userMapper.toSafeUser(updatedUser);
   }
 }

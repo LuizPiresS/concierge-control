@@ -1,9 +1,8 @@
-import { Global, Module, Logger, Provider } from '@nestjs/common';
+import { Global, Logger, Module, Provider } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { S3Client, S3ClientConfig } from '@aws-sdk/client-s3';
-import { LocationClient, LocationClientConfig } from '@aws-sdk/client-location';
+import { LocationClientConfig } from '@aws-sdk/client-location';
 import { S3Service } from './services/s3.service';
-import { LocationService } from './services/location.service';
 
 function getEnvString(
   configService: ConfigService,
@@ -78,10 +77,8 @@ function createAwsClientProvider<TClient, TConfig extends AwsClientConfig>(
     createAwsClientProvider(S3Client, 'AWS_S3_ENDPOINT', {
       forcePathStyle: true, // Necessário para LocalStack
     }),
-    createAwsClientProvider(LocationClient, 'AWS_LOCATION_ENDPOINT'),
     S3Service,
-    LocationService,
   ],
-  exports: [S3Service, LocationService],
+  exports: [S3Service],
 })
 export class AWSModule {}

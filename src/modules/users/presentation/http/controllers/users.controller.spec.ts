@@ -56,6 +56,7 @@ describe('UserController', () => {
       const createUserDto: CreateUserDto = {
         email: 'new@example.com',
         password: 'password123',
+        condominiumId: 'a-valid-uuid',
       };
 
       // Configure the mock service to return the mock user when 'create' is called

@@ -11,6 +11,18 @@ import { UpdateUserUseCase } from './update-user.usecase';
 // Mock the bcrypt library
 jest.mock('bcrypt');
 
+// --- MELHORIA: Mocks centralizados para clareza e reutilização ---
+const mockUserRepository = {
+  findByUnique: jest.fn(),
+  update: jest.fn(),
+};
+
+const mockUserMapper = {
+  updateDtoToUpdateInput: jest.fn(),
+  // CORREÇÃO: Adicionamos o mock para o método que remove a senha.
+  toSafeUser: jest.fn(),
+};
+
 describe('UpdateUserUseCase', () => {
   let updateUserUseCase: UpdateUserUseCase;
   let userRepository: jest.Mocked<IUserRepository>;
@@ -22,16 +34,11 @@ describe('UpdateUserUseCase', () => {
         UpdateUserUseCase,
         {
           provide: USER_REPOSITORY_TOKEN,
-          useValue: {
-            findByUnique: jest.fn(),
-            update: jest.fn(),
-          },
+          useValue: mockUserRepository,
         },
         {
           provide: UserMapper,
-          useValue: {
-            updateDtoToUpdateInput: jest.fn(),
-          },
+          useValue: mockUserMapper,
         },
       ],
     }).compile();
@@ -58,6 +65,7 @@ describe('UpdateUserUseCase', () => {
       updatedAt: new Date(),
       isDeleted: false,
       isActive: true,
+      condominiumId: 'a-valid-uuid',
     };
 
     it('should throw NotFoundException if user does not exist', async () => {
@@ -69,7 +77,7 @@ describe('UpdateUserUseCase', () => {
       userRepository.findByUnique.mockResolvedValue(null);
 
       // Act & Assert
-      // CORRIGIDO: A chamada ao execute agora passa um único objeto 'request'.
+      // A chamada ao execute agora passa um único objeto 'request'.
       await expect(updateUserUseCase.execute(request)).rejects.toThrow(
         new NotFoundException(`Usuário com ID ${userId} não encontrado.`),
       );
@@ -79,25 +87,25 @@ describe('UpdateUserUseCase', () => {
     });
 
     it('should update user data without changing the password', async () => {
-      // Arrange
-      const request = {
-        id: userId,
-        dto: { email: 'emailUpdates@email.com' },
-      };
-      const dataToUpdate = { email: 'emailUpdates@email.com' };
-      const updatedUser = { ...mockUser, email: 'emailUpdates@email.com' };
+      // --- Arrange ---
+      const newEmail = 'jane.doe.updated@example.com';
+      const request = { id: userId, dto: { email: newEmail } };
+
+      const dataToUpdate = { email: newEmail }; // O que o mapper de DTO retorna.
+      const updatedUserFromDb = { ...mockUser, email: newEmail }; // O que o repositório retorna.
+      const expectedSafeUser = { ...updatedUserFromDb }; // O que o mapper `toSafeUser` retorna.
+      delete (expectedSafeUser as Partial<User>).password;
 
       userRepository.findByUnique.mockResolvedValue(mockUser);
       userMapper.updateDtoToUpdateInput.mockReturnValue(dataToUpdate);
-      userRepository.update.mockResolvedValue(updatedUser);
+      userRepository.update.mockResolvedValue(updatedUserFromDb);
+      userMapper.toSafeUser.mockReturnValue(expectedSafeUser);
 
-      // Act
-      // CORRIGIDO: A chamada ao execute agora passa um único objeto 'request'.
+      // --- Act ---
       const result = await updateUserUseCase.execute(request);
 
-      // Assert
+      // --- Assert ---
       expect(userRepository.findByUnique).toHaveBeenCalledWith({ id: userId });
-      // CORRIGIDO: Verifica se o mapper foi chamado com o DTO de dentro do request.
       expect(userMapper.updateDtoToUpdateInput).toHaveBeenCalledWith(
         request.dto,
       );
@@ -105,78 +113,46 @@ describe('UpdateUserUseCase', () => {
         { id: userId },
         dataToUpdate,
       );
+      expect(userMapper.toSafeUser).toHaveBeenCalledWith(updatedUserFromDb);
       expect(bcrypt.hash).not.toHaveBeenCalled();
-      expect(result).toEqual({
-        id: updatedUser.id,
-        email: updatedUser.email,
-        createdAt: updatedUser.createdAt,
-        updatedAt: updatedUser.updatedAt,
-        isDeleted: false,
-        isActive: true,
-      });
-      expect(result).not.toHaveProperty('password');
+      expect(result).toEqual(expectedSafeUser);
     });
 
     it('should update user and hash the new password if provided', async () => {
-      // Arrange
-      const request = {
-        id: userId,
-        dto: { password: 'newPassword456' },
-      };
-      const dataToUpdate = { password: 'newPassword456' };
+      // --- Arrange ---
+      const newPassword = 'newSecurePassword123';
       const hashedPassword = 'hashedNewPassword456';
-      const updatedUser = { ...mockUser, password: hashedPassword };
+      const request = { id: userId, dto: { password: newPassword } };
+
+      const dataToUpdate = { password: newPassword }; // O que o mapper de DTO retorna.
+      const updatedUserFromDb = {
+        ...mockUser,
+        password: hashedPassword,
+      };
+      const expectedSafeUser = { ...updatedUserFromDb };
+      delete (expectedSafeUser as Partial<User>).password;
 
       userRepository.findByUnique.mockResolvedValue(mockUser);
       userMapper.updateDtoToUpdateInput.mockReturnValue(dataToUpdate);
-      (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
-      userRepository.update.mockResolvedValue(updatedUser);
+      (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword); // O bcrypt retorna a senha hasheada.
+      userRepository.update.mockResolvedValue(updatedUserFromDb);
+      userMapper.toSafeUser.mockReturnValue(expectedSafeUser);
 
-      // Act
-      // CORRIGIDO: A chamada ao execute agora passa um único objeto 'request'.
+      // --- Act ---
       const result = await updateUserUseCase.execute(request);
 
-      // Assert
+      // --- Assert ---
       expect(userRepository.findByUnique).toHaveBeenCalledWith({ id: userId });
       expect(userMapper.updateDtoToUpdateInput).toHaveBeenCalledWith(
         request.dto,
       );
-      expect(bcrypt.hash).toHaveBeenCalledWith('newPassword456', 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith(newPassword, 10);
       expect(userRepository.update).toHaveBeenCalledWith(
         { id: userId },
         { password: hashedPassword },
       );
-      expect(result).not.toHaveProperty('password');
-    });
-
-    it('should return the updated user without the password field', async () => {
-      // Arrange
-      const newEmail = 'jane.doe@example.com';
-      const request = {
-        id: userId,
-        dto: { email: newEmail },
-      };
-      const dataToUpdate = { email: newEmail };
-      const updatedUserWithPassword = { ...mockUser, email: newEmail };
-
-      userRepository.findByUnique.mockResolvedValue(mockUser);
-      userMapper.updateDtoToUpdateInput.mockReturnValue(dataToUpdate);
-      userRepository.update.mockResolvedValue(updatedUserWithPassword);
-
-      // Act
-      // CORRIGIDO: A chamada ao execute agora passa um único objeto 'request'.
-      const result = await updateUserUseCase.execute(request);
-
-      // Assert
-      expect(result).toEqual({
-        id: mockUser.id,
-        email: newEmail,
-        createdAt: mockUser.createdAt,
-        updatedAt: mockUser.updatedAt,
-        isDeleted: false,
-        isActive: true,
-      });
-      expect(result).not.toHaveProperty('password');
+      expect(userMapper.toSafeUser).toHaveBeenCalledWith(updatedUserFromDb);
+      expect(result).toEqual(expectedSafeUser);
     });
   });
 });

@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from './infrastructure/database/prisma/prisma.module';
+import { SharedModule } from './shared/shared.module';
 import { UsersModule } from './modules/users/users.module';
-import { CondominiumModule } from './modules/condominiums/condominium.module';
+import { CondominiumsModule } from './modules/condominiums/condominium.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, CondominiumModule],
-  controllers: [],
-  providers: [],
+  imports: [SharedModule, UsersModule, CondominiumsModule],
 })
 export class AppModule {}

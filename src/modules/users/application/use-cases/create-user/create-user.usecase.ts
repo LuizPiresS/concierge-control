@@ -5,13 +5,13 @@ import { IUserRepository } from '../../../domain/repositories/user.repository.in
 import { CreateUserDto } from '../../../presentation/http/dtos/create-user.dto';
 import { User } from '@prisma/client';
 import { IUseCase } from '../../../../../shared/domain/use-case.interface';
+import { UserMapper } from '../../mappers/user.mapper';
 
-// 2. Defina tipos explícitos para a entrada e saída do caso de uso
+// Tipos explícitos para a entrada e saída do caso de uso.
 type CreateUserRequest = CreateUserDto;
 type CreateUserResponse = Omit<User, 'password'>;
 
 @Injectable()
-// 3. Implemente a interface genérica com os tipos definidos
 export class CreateUserUseCase
   implements IUseCase<CreateUserRequest, CreateUserResponse>
 {
@@ -20,14 +20,9 @@ export class CreateUserUseCase
   constructor(
     @Inject(USER_REPOSITORY_TOKEN)
     private readonly userRepository: IUserRepository,
+    private readonly userMapper: UserMapper,
   ) {}
 
-  private excludePassword(user: User): CreateUserResponse {
-    const { password: _password, ...result } = user;
-    return result;
-  }
-
-  // 4. O método 'execute' agora segue o contrato da interface
   async execute(request: CreateUserRequest): Promise<CreateUserResponse> {
     const existingUser = await this.userRepository.findByEmail(request.email);
     if (existingUser) {
@@ -36,11 +31,19 @@ export class CreateUserUseCase
 
     const hashedPassword = await bcrypt.hash(request.password, this.saltRounds);
 
+    // Em vez de passar 'condominiumId' diretamente, usamos a sintaxe 'connect'
+    // do Prisma no campo da relação ('condominium').
     const newUser = await this.userRepository.create({
       email: request.email,
       password: hashedPassword,
+      condominium: {
+        connect: {
+          id: request.condominiumId,
+        },
+      },
     });
 
-    return this.excludePassword(newUser);
+    // Utilizar o mapper para remover a senha antes de retornar.
+    return this.userMapper.toSafeUser(newUser);
   }
 }

@@ -19,6 +19,7 @@ const mockUser: User = {
   updatedAt: new Date(),
   isDeleted: false,
   isActive: true,
+  condominiumId: 'a-valid-uuid',
 };
 
 // Mock factory para os casos de uso
@@ -66,6 +67,7 @@ describe('UserService', () => {
       const createUserDto: CreateUserDto = {
         email: 'new@example.com',
         password: 'password123',
+        condominiumId: 'a-valid-uuid',
       };
       createUserUseCase.execute.mockResolvedValue(mockUser);
 
