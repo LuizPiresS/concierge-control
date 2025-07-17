@@ -1,15 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { User } from '@prisma/client';
 import { UsersController } from './users.controller';
 import { UserService } from '../../../application/services/users.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { UpdateUserDto } from '../dtos/update-user.dto';
-import { v4 as uuidv4 } from 'uuid';
 
-// A mock user object to be returned by the service
-const mockUser = {
-  id: uuidv4(),
-  name: 'Test User',
-  email: 'test@example.com',
+// A mock user object to be returned by the service.
+// Its shape now matches the actual `User` entity, but without the password.
+const mockSafeUser: Omit<User, 'password'> = {
+  id: 'a-valid-uuid',
+  email: 'test-user@example.com',
+  condominiumId: 'condo-uuid-1',
+  isActive: true,
+  isDeleted: false,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -60,20 +63,20 @@ describe('UserController', () => {
       };
 
       // Configure the mock service to return the mock user when 'create' is called
-      mockUserService.create.mockResolvedValue(mockUser);
+      mockUserService.create.mockResolvedValue(mockSafeUser);
 
       const result = await controller.create(createUserDto);
 
       // Check if the service's create method was called with the correct DTO
       expect(service.create).toHaveBeenCalledWith(createUserDto);
       // Check if the controller returned the value from the service
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockSafeUser);
     });
   });
 
   describe('findAll()', () => {
     it('should return an array of users', async () => {
-      const users = [mockUser];
+      const users = [mockSafeUser];
       mockUserService.findAll.mockResolvedValue(users);
 
       const result = await controller.findAll();
@@ -85,21 +88,21 @@ describe('UserController', () => {
 
   describe('findOne()', () => {
     it('should return a single user by ID', async () => {
-      const userId = mockUser.id;
-      mockUserService.findOne.mockResolvedValue(mockUser);
+      const userId = mockSafeUser.id;
+      mockUserService.findOne.mockResolvedValue(mockSafeUser);
 
       const result = await controller.findOne(userId);
 
       expect(service.findOne).toHaveBeenCalledWith(userId);
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockSafeUser);
     });
   });
 
   describe('update()', () => {
     it('should update a user and return the updated user', async () => {
-      const userId = mockUser.id;
-      const updateUserDto: UpdateUserDto = { email: 'Updated@email.com' };
-      const updatedUser = { ...mockUser, ...updateUserDto };
+      const userId = mockSafeUser.id;
+      const updateUserDto: UpdateUserDto = { email: 'updated@email.com' };
+      const updatedUser = { ...mockSafeUser, ...updateUserDto };
 
       mockUserService.update.mockResolvedValue(updatedUser);
 
@@ -111,18 +114,19 @@ describe('UserController', () => {
   });
 
   describe('remove()', () => {
-    it('should remove a user and return void', async () => {
-      const userId = mockUser.id;
-      // The remove method in the service might not return anything (void)
-      mockUserService.remove.mockResolvedValue(undefined);
+    it('should remove a user and return true', async () => {
+      const userId = mockSafeUser.id;
+      // The service's remove method returns a promise that resolves to a boolean.
+      mockUserService.remove.mockResolvedValue(true);
 
+      // The controller returns the promise from the service.
       const result = await controller.remove(userId);
 
       expect(service.remove).toHaveBeenCalledWith(userId);
       // Since the method is decorated with @HttpCode(HttpStatus.NO_CONTENT),
       // NestJS handles the response. The controller method itself returns the promise
-      // from the service, which resolves to undefined in this case.
-      expect(result).toBeUndefined();
+      // from the service.
+      expect(result).toBe(true);
     });
   });
 });

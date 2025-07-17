@@ -1,186 +1,206 @@
+# Concierge Control
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-18.x-brightgreen.svg" alt="Node.js Version" />
+  <img src="https://img.shields.io/badge/NestJS-11.x-red.svg" alt="NestJS Version" />
+  <img src="https://img.shields.io/badge/Prisma-6.x-blue.svg" alt="Prisma Version" />
+  <img src="https://img.shields.io/badge/License-UNLICENSED-lightgrey.svg" alt="License" />
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## 📝 Descrição
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+**Concierge Control** é uma aplicação de back-end robusta e escalável, construída com o framework NestJS. O projeto serve como um sistema de gerenciamento para condomínios, implementando uma arquitetura limpa para garantir a separação de responsabilidades e a manutenibilidade do código a longo prazo.
 
-## Configurações e Qualidade de Código
+## ✨ Principais Funcionalidades e Tecnologias
 
-Este projeto já vem configurado com as principais ferramentas para garantir qualidade, padronização e segurança no desenvolvimento:
+- **Core Framework**: NestJS (TypeScript)
+- **Arquitetura**: Baseada em princípios de Arquitetura Limpa (Clean Architecture), com uma clara separação entre Domínio, Aplicação e Infraestrutura.
+- **Banco de Dados**: PostgreSQL com Prisma como ORM.
+- **Serviços AWS**: Integração com serviços da AWS, simulados localmente com LocalStack para um desenvolvimento eficiente.
+  - **S3**: Armazenamento de arquivos (fotos de perfil, documentos).
+  - **SES**: Envio de e-mails transacionais.
+  - **Outros**: SNS, SQS, Location Service, Secrets Manager.
+- **Qualidade de Código**:
+  - **ESLint**: Para padronização de código.
+  - **Prettier**: Para formatação automática.
+  - **Husky & lint-staged**: Para garantir que o código seja verificado e formatado antes de cada commit.
+  - **Commitlint**: Para padronizar as mensagens de commit.
+- **Testes**: Cobertura de testes unitários e de integração com Jest.
+- **Containerização**: Ambiente de desenvolvimento totalmente containerizado com Docker e Docker Compose.
 
-- **ESLint**: Linting de código para manter o padrão e evitar erros comuns.
-- **Prettier**: Formatação automática do código.
-- **Husky**: Hooks de Git para automatizar checagens antes de commits e push.
-- **lint-staged**: Garante que apenas arquivos alterados sejam verificados e formatados antes do commit.
-- **Commitlint**: Padroniza as mensagens de commit.
-- **Cobertura mínima de testes**: O projeto exige pelo menos 80% de cobertura global de testes (statements, branches, functions e lines).
-- **Pre-push**: Antes de enviar código para o repositório remoto, são executados automaticamente os comandos de lint, build e testes com cobertura. O push é bloqueado caso a cobertura mínima não seja atingida.
+---
 
-## Project setup
+## 🚀 Guia de Configuração do Ambiente
 
-```bash
-$ npm install
-```
+Siga estes passos para configurar e executar o projeto localmente.
 
-## Compile and run the project
+### Pré-requisitos
 
-```bash
-# development
-$ npm run start
+Antes de começar, garanta que você tenha os seguintes softwares instalados:
 
-# watch mode
-$ npm run start:dev
+- **Node.js**: Versão 18.x ou superior (versão LTS recomendada).
+- **Docker** & **Docker Compose**: Para orquestrar os containers.
 
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
+### 1. Clonar o Repositório
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage (mínimo exigido: 80%)
-$ npm run test:cov
+git clone <url-do-seu-repositorio>
+cd concierge-control
 ```
 
-Se a cobertura global de testes estiver abaixo de 80%, o push será bloqueado automaticamente pelo hook de pre-push.
+### 2. Configurar Variáveis de Ambiente
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Copie o arquivo de exemplo `.env.example` para um novo arquivo chamado `.env`. Os valores padrão já estão configurados para funcionar com o ambiente Docker local.
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+cp .env.example .env
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 3. Instalar Dependências
 
-## Resources
+Instale todas as dependências do Node.js:
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+npm install
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 4. Instalar e Configurar a AWS CLI (Apenas na primeira vez)
 
-## Support
+Para interagir com o LocalStack a partir do seu terminal, você precisa da AWS CLI. Este script irá instalá-la (se necessário) e configurar um perfil `localstack` para facilitar a comunicação.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+> **Importante**: Você só precisa executar este comando **uma vez por máquina**.
 
-## Stay in touch
+```bash
+npm run aws:setup
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### 5. Iniciar o Ambiente Docker
 
-## License
+Use o comando principal do projeto para subir todos os containers e configurar os serviços da AWS no LocalStack automaticamente.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+npm run dev:up
+```
 
-## Variáveis de Ambiente
+**O que este script faz?**
+1.  Verifica se o Docker e a AWS CLI estão disponíveis.
+2.  Para e remove containers antigos para garantir um ambiente limpo.
+3.  Sobe todos os serviços (`app`, `db`, `redis`, `localstack`) em background.
+4.  O LocalStack executa automaticamente os scripts em `scripts/localstack/`, criando buckets S3, identidade SES, etc.
+5.  Aguarda até que o ambiente esteja totalmente pronto para uso.
 
-Crie um arquivo `.env` na raiz do projeto com base no `.env.example`:
+### 6. Rodar as Migrações do Banco de Dados
 
-```env
+Com o container do banco de dados em execução, aplique as migrações do Prisma:
+
+```bash
+npx prisma migrate dev
+```
+
+🎉 **Pronto!** Seu ambiente de desenvolvimento está configurado e em execução.
+
+---
+
+## ⚙️ Comandos Úteis
+
+### Executando a Aplicação
+
+- **Modo de desenvolvimento com watch:**
+  ```bash
+  npm run start:dev
+  ```
+
+- **Modo de produção:**
+  ```bash
+  npm run build
+  npm run start:prod
+  ```
+
+### Executando Testes
+
+- **Rodar todos os testes unitários e de integração:**
+  ```bash
+  npm run test
+  ```
+
+- **Gerar relatório de cobertura de testes:**
+  ```bash
+  npm run test:cov
+  ```
+
+### Documentação da API
+
+A API é documentada com Swagger (OpenAPI). Após iniciar a aplicação, acesse a documentação interativa em:
+http://localhost:3000/api (A porta pode variar conforme seu `.env`)
+
+---
+
+## ☁️ LocalStack e Serviços AWS
+
+O projeto utiliza **LocalStack** para simular a infraestrutura da AWS localmente. Isso permite desenvolver e testar integrações com serviços como S3 e SES sem custos e sem a necessidade de uma conta AWS real para o desenvolvimento diário.
+
+- **Inicialização Automática**: Os scripts localizados em `./scripts/localstack/` são executados automaticamente quando o container do LocalStack inicia, configurando todos os recursos necessários (buckets, identidades de e-mail, etc.).
+- **Verificação**: Após a inicialização, você pode verificar os recursos criados usando a AWS CLI apontada para o LocalStack. O script `setup-localstack.sh` exibe exemplos de comandos ao final de sua execução.
+
+```sh
+# Exemplo para verificar a identidade de e-mail criada no SES
+aws --profile localstack --endpoint-url=http://localhost:4566 ses list-identities
+
+# Exemplo para listar os buckets S3
+aws --profile localstack --endpoint-url=http://localhost:4566 s3 ls
+```
+
+---
+
+## 🔐 Variáveis de Ambiente
+
+O arquivo `.env` é crucial para a configuração da aplicação. Ele é baseado no `.env.example`:
+
+```dotenv
+# .env.example
+
+# APP CONFIGURATION
+APP_NAME='concierge-control'
+CONTAINER_NAME='concierge-control'
+APP_PORT=3000
+NODE_ENV=development
+BASE_URL="http://localhost:${APP_PORT}"
+
+# BCRYPT
+SALTS=13
+
+# DATABASE
 DB_USER=postgres
 DB_PASS=postgres
 DB_HOST=db
 DB_PORT=5432
-DB_NAME=protect_sys_erp
+DB_NAME=concierge-control
 DB_SCHEMA=public
-REDIS_HOST=redis
-CONTAINER_NAME=nestjs-boilerplate
-APP_PORT=3000
+
+# Bcrypt
+SALT_ROUNDS=13
+
+# AWS
+AWS_ACCESS_KEY_ID=your_access_key_id
+AWS_SECRET_ACCESS_KEY=your_secret_access_key
+AWS_REGION=your_aws_region
+AWS_LOCATION_INDEX_NAME=your_location_index_name
+AWS_LOCATION_ENDPOINT=
+
+# Email
+MAIL_FROM='"Concierge Control" <no-reply@conciergecontrol.com>'
+MAIL_HOST=smtp.ethereal.email
+MAIL_USER=tess.botsford62@ethereal.email
+MAIL_PORT=587
+MAIL_PASS=m5rzwSe2wZJVz9euS9
 ```
 
-Essas variáveis são usadas para montar a `DATABASE_URL` dinamicamente no `docker-compose.yml`:
+> **Atenção**: O arquivo `.env` é ignorado pelo Git e nunca deve ser versionado.
 
-```yaml
-environment:
-  - DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=${DB_SCHEMA}
-  - REDIS_HOST=${REDIS_HOST}
-```
+## 📄 Licença
 
----
-
-## LocalStack e Scripts de Inicialização
-
-O projeto utiliza o [LocalStack](https://github.com/localstack/localstack) para simular serviços AWS localmente. Os scripts de setup em `scripts/localstack/` são executados automaticamente toda vez que o container LocalStack sobe, criando buckets S3, tópicos SNS, secrets, etc.
-
-### Como funciona:
-- Todos os scripts em `scripts/localstack/` são mapeados para `/docker-entrypoint-initaws.d` no container LocalStack.
-- O LocalStack executa esses scripts automaticamente na inicialização.
-- Os scripts são idempotentes: se o recurso já existe, apenas ignoram ou avisam.
-
-### Scripts auxiliares
-- `scripts/setup-aws-cli.sh`: Instala/configura a AWS CLI no seu ambiente local. Execute apenas uma vez por máquina.
-- `scripts/setup-localstack.sh`: Facilita o setup local, parando/subindo containers e executando os scripts de setup manualmente. Use quando quiser garantir que o ambiente está limpo e todos os recursos foram criados do zero.
-
----
-
-## Fluxo de Setup Local
-
-1. Copie `.env.example` para `.env` e ajuste as variáveis conforme necessário.
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
-3. (Opcional) Instale a AWS CLI localmente:
-   ```bash
-   ./scripts/setup-aws-cli.sh
-   ```
-4. Suba os containers:
-   ```bash
-   docker-compose up
-   ```
-   Os scripts de setup do LocalStack serão executados automaticamente.
-5. Rode as migrações do Prisma:
-   ```bash
-   npx prisma migrate dev
-   ```
-6. Execute os testes:
-   ```bash
-   npm run test
-   npm run test:cov
-   ```
-
----
-
-## Observações
-- O arquivo `.env` **não** deve ser versionado (já está no `.gitignore`).
-- Sempre mantenha o `.env.example` atualizado para facilitar o onboarding de novos desenvolvedores.
-- Os scripts de setup do LocalStack podem ser ajustados conforme a necessidade de novos recursos AWS simulados.
+Este projeto é distribuído sob a licença UNLICENSED.

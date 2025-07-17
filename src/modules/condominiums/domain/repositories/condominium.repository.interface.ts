@@ -1,16 +1,24 @@
 import { Condominium, Prisma } from '@prisma/client';
+import { IGenericRepository } from '../../../../infrastructure/database/prisma/repositories/generic-repository/interfaces/generic-repository.interface';
 
-/**
- * O token de injeção é um Symbol, garantindo que seja único na aplicação.
- * Este é o único local onde este token deve ser definido.
- */
 export const CONDOMINIUM_REPOSITORY_TOKEN = Symbol('ICondominiumRepository');
 
-/**
- * A interface define o contrato que a implementação do repositório
- * (camada de infraestrutura) deve seguir.
- */
-export interface ICondominiumRepository {
-  create(data: Prisma.CondominiumCreateInput): Promise<Condominium>;
+export interface ICondominiumRepository
+  extends IGenericRepository<
+    Condominium, // T (Entity)
+    Prisma.CondominiumWhereInput, // WhereInput
+    Prisma.CondominiumWhereUniqueInput, // WhereUniqueInput
+    Prisma.CondominiumCreateInput, // CreateInput
+    Prisma.CondominiumUpdateInput, // UpdateInput
+    Prisma.CondominiumFindManyArgs // FindManyArgs
+  > {
+  /**
+   * Finds a condominium by its unique CNPJ.
+   */
   findByCnpj(cnpj: string): Promise<Condominium | null>;
+  findByEmail(email: string): Promise<Condominium | null>;
+  createWithManager(
+    condominiumData: Omit<Prisma.CondominiumCreateInput, 'users'>,
+    managerData: { email: string; hashedPassword: string },
+  ): Promise<Condominium>;
 }

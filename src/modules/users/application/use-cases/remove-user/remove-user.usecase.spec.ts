@@ -57,13 +57,13 @@ describe('RemoveUserUseCase', () => {
       const userId = 'a-valid-uuid';
       // Usamos a instância injetada para configurar o comportamento do mock.
       userRepository.findByUnique.mockResolvedValue(mockUser);
-      userRepository.delete.mockResolvedValue(true); // `delete` geralmente retorna void
+      userRepository.delete.mockResolvedValue(true);
 
       // Act
       const result = await useCase.execute(userId);
 
       // Assert
-      expect(result).toBeTruthy(); // O método retorna void em caso de sucesso.
+      expect(result).toBe(true); // O método deve retornar `true` em caso de sucesso.
       expect(userRepository.findByUnique).toHaveBeenCalledWith({ id: userId });
       expect(userRepository.findByUnique).toHaveBeenCalledTimes(1);
       expect(userRepository.delete).toHaveBeenCalledWith({ id: userId });
@@ -77,14 +77,15 @@ describe('RemoveUserUseCase', () => {
       userRepository.findByUnique.mockResolvedValue(null);
 
       // Act & Assert
-      // Verificamos se a exceção correta é lançada.
-      await expect(useCase.execute(userId)).rejects.toThrow(NotFoundException);
+      // MELHORIA: A asserção agora verifica a instância da exceção e a mensagem de uma só vez,
+      // o que é mais eficiente e preciso. Evitamos chamar `useCase.execute` duas vezes.
       await expect(useCase.execute(userId)).rejects.toThrow(
-        `Usuário com ID ${userId} não encontrado.`,
+        new NotFoundException(`Usuário com ID ${userId} não encontrado.`),
       );
 
       // Verificamos que o método de deleção nunca foi chamado.
       expect(userRepository.findByUnique).toHaveBeenCalledWith({ id: userId });
+      expect(userRepository.findByUnique).toHaveBeenCalledTimes(1); // Garante que a verificação ocorreu apenas uma vez.
       expect(userRepository.delete).not.toHaveBeenCalled();
     });
   });

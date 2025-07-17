@@ -1,6 +1,5 @@
 import { Global, Module } from '@nestjs/common';
 import { PasswordGeneratorService } from './utils/password-generator.service';
-import { AWSModule } from './aws/aws.module';
 
 /**
  * O SharedModule agrupa provedores e módulos que são usados em toda a aplicação.
@@ -12,11 +11,7 @@ import { AWSModule } from './aws/aws.module';
  */
 @Global()
 @Module({
-  imports: [
-    // O AWSModule já é global, mas importá-lo aqui mantém a clareza de que
-    // os serviços da AWS fazem parte do "contexto compartilhado" da aplicação.
-    AWSModule,
-  ],
+  imports: [],
   providers: [
     // Declaramos o PasswordGeneratorService para que o NestJS possa gerenciá-lo
     // e injetá-lo em outros serviços.

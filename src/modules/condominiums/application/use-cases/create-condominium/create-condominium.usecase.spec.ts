@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, Logger } from '@nestjs/common';
+import {
+  ConflictException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { Condominium } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import {
@@ -7,8 +11,11 @@ import {
   ICondominiumRepository,
 } from '../../../domain/repositories/condominium.repository.interface';
 import { PasswordGeneratorService } from '../../../../../shared/utils/password-generator.service';
-import { PrismaService } from '../../../../../infrastructure/database/prisma/prisma.service';
 import { CreateCondominiumDto } from '../../../presentation/http/dtos/create-condominium.dto';
+import {
+  EMAIL_SERVICE_TOKEN,
+  IEmailService,
+} from '../../../../../shared/notifications/domain/email.service.interface';
 import { CreateCondominiumUseCase } from './create-condominium.usecase';
 
 // Mock bcrypt
@@ -18,20 +25,21 @@ describe('CreateCondominiumUseCase', () => {
   let useCase: CreateCondominiumUseCase;
   let condominiumRepository: jest.Mocked<ICondominiumRepository>;
   let passwordGenerator: jest.Mocked<PasswordGeneratorService>;
-  let prismaService: jest.Mocked<PrismaService>;
+  let emailService: jest.Mocked<IEmailService>;
 
   const mockCondominiumRepository = {
     findByCnpj: jest.fn(),
     // Add other methods if they are used, with jest.fn()
+    findByEmail: jest.fn(),
+    createWithManager: jest.fn(),
   };
 
   const mockPasswordGenerator = {
     generate: jest.fn(),
   };
 
-  const mockPrismaService = {
-    $transaction: jest.fn(),
-    // Mock other prisma client methods if needed
+  const mockEmailService = {
+    sendMail: jest.fn(),
   };
 
   // CORREÇÃO: O DTO agora inclui todos os campos obrigatórios.
@@ -60,8 +68,8 @@ describe('CreateCondominiumUseCase', () => {
           useValue: mockPasswordGenerator,
         },
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: EMAIL_SERVICE_TOKEN,
+          useValue: mockEmailService,
         },
       ],
     })
@@ -71,7 +79,7 @@ describe('CreateCondominiumUseCase', () => {
     useCase = module.get<CreateCondominiumUseCase>(CreateCondominiumUseCase);
     condominiumRepository = module.get(CONDOMINIUM_REPOSITORY_TOKEN);
     passwordGenerator = module.get(PasswordGeneratorService);
-    prismaService = module.get(PrismaService);
+    emailService = module.get(EMAIL_SERVICE_TOKEN);
 
     // Reset mocks before each test
     jest.clearAllMocks();
@@ -110,56 +118,44 @@ describe('CreateCondominiumUseCase', () => {
       };
 
       condominiumRepository.findByCnpj.mockResolvedValue(null);
+      condominiumRepository.findByEmail.mockResolvedValue(null);
       passwordGenerator.generate.mockReturnValue(temporaryPassword);
+      emailService.sendMail.mockResolvedValue(undefined);
       (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
 
-      // CORREÇÃO: Criamos um mock do cliente transacional que pode ser inspecionado.
-      const mockTransactionClient = {
-        user: {
-          findUnique: jest.fn().mockResolvedValue(null),
-          create: jest.fn(),
-        },
-        condominium: {
-          create: jest.fn().mockResolvedValue(createdCondo),
-        },
-      };
-
-      // Mock the transaction
-      prismaService.$transaction.mockImplementation(async (callback) => {
-        // Usamos "as any" para contornar o erro de tipagem, já que só precisamos mockar uma parte do cliente.
-        return await callback(mockTransactionClient as any);
-      });
+      // REFATORAÇÃO: Em vez de mockar o Prisma, mockamos o método do repositório.
+      condominiumRepository.createWithManager.mockResolvedValue(createdCondo);
 
       // Act
       const result = await useCase.execute(createCondominiumDto);
 
       // Assert
+      // Verifica se as validações foram chamadas
       expect(condominiumRepository.findByCnpj).toHaveBeenCalledWith(
         createCondominiumDto.cnpj,
       );
-      expect(prismaService.$transaction).toHaveBeenCalledTimes(1);
+
+      // Verifica a lógica de negócio
       expect(passwordGenerator.generate).toHaveBeenCalledTimes(1);
       expect(bcrypt.hash).toHaveBeenCalledWith(temporaryPassword, 10);
 
-      // Assert transaction internal calls directly on the inspectable mock
-      expect(mockTransactionClient.user.findUnique).toHaveBeenCalledWith({
-        where: { email: createCondominiumDto.managerEmail },
-      });
-
-      // CORREÇÃO: Verifica se todos os dados do condomínio são passados.
+      // Verifica se a criação foi delegada corretamente ao repositório
       const { managerEmail: _managerEmail, ...condominiumData } =
         createCondominiumDto;
-      expect(mockTransactionClient.condominium.create).toHaveBeenCalledWith({
-        data: condominiumData,
-      });
+      expect(condominiumRepository.createWithManager).toHaveBeenCalledWith(
+        condominiumData,
+        { email: createCondominiumDto.managerEmail, hashedPassword },
+      );
 
-      expect(mockTransactionClient.user.create).toHaveBeenCalledWith({
-        data: {
-          email: createCondominiumDto.managerEmail,
-          password: hashedPassword,
-          condominium: {
-            connect: { id: createdCondo.id },
-          },
+      // Assert a chamada ao serviço de e-mail
+      expect(emailService.sendMail).toHaveBeenCalledWith({
+        to: createCondominiumDto.managerEmail,
+        subject: `Bem-vindo ao Concierge Control, ${createdCondo.name}!`,
+        template: 'welcome-email',
+        context: {
+          name: createdCondo.name,
+          managerEmail: createCondominiumDto.managerEmail,
+          password: temporaryPassword,
         },
       });
 
@@ -179,11 +175,7 @@ describe('CreateCondominiumUseCase', () => {
       await expect(useCase.execute(createCondominiumDto)).rejects.toThrow(
         new ConflictException('A condominium with this CNPJ already exists.'),
       );
-
-      expect(condominiumRepository.findByCnpj).toHaveBeenCalledWith(
-        createCondominiumDto.cnpj,
-      );
-      expect(prismaService.$transaction).not.toHaveBeenCalled();
+      expect(condominiumRepository.createWithManager).not.toHaveBeenCalled();
     });
 
     it('should throw a ConflictException if the manager email already exists', async () => {
@@ -193,34 +185,30 @@ describe('CreateCondominiumUseCase', () => {
       const conflictError = new ConflictException(
         'Este e-mail de síndico já está em uso.',
       );
-      prismaService.$transaction.mockRejectedValue(conflictError);
+      condominiumRepository.createWithManager.mockRejectedValue(conflictError);
 
       // Act & Assert
       await expect(useCase.execute(createCondominiumDto)).rejects.toThrow(
         conflictError,
       );
-
-      expect(condominiumRepository.findByCnpj).toHaveBeenCalledWith(
-        createCondominiumDto.cnpj,
-      );
-      expect(prismaService.$transaction).toHaveBeenCalledTimes(1);
+      expect(condominiumRepository.createWithManager).toHaveBeenCalledTimes(1);
     });
 
     it('should throw a generic Error if the transaction fails for other reasons', async () => {
       // Arrange
       condominiumRepository.findByCnpj.mockResolvedValue(null);
       const dbError = new Error('Database connection lost');
-      prismaService.$transaction.mockRejectedValue(dbError);
+      condominiumRepository.createWithManager.mockRejectedValue(dbError);
 
       // Act & Assert
+      // MELHORIA: A asserção agora verifica o tipo da exceção e a mensagem,
+      // tornando o teste mais robusto e específico.
       await expect(useCase.execute(createCondominiumDto)).rejects.toThrow(
-        new Error('Failed to create condominium and initial manager user.'),
+        new InternalServerErrorException(
+          'An internal error occurred while creating the condominium.',
+        ),
       );
-
-      expect(condominiumRepository.findByCnpj).toHaveBeenCalledWith(
-        createCondominiumDto.cnpj,
-      );
-      expect(prismaService.$transaction).toHaveBeenCalledTimes(1);
+      expect(condominiumRepository.createWithManager).toHaveBeenCalledTimes(1);
     });
   });
 });
