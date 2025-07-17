@@ -1,14 +1,24 @@
-import { ConflictException, Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { Condominium } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { IUseCase } from '../../../../../shared/domain/use-case.interface';
 import { PasswordGeneratorService } from '../../../../../shared/utils/password-generator.service';
-import { PrismaService } from '../../../../../infrastructure/database/prisma/prisma.service';
+// A dependência direta do PrismaService foi removida.
 import {
   CONDOMINIUM_REPOSITORY_TOKEN,
   ICondominiumRepository,
 } from '../../../domain/repositories/condominium.repository.interface';
 import { CreateCondominiumDto } from '../../../presentation/http/dtos/create-condominium.dto';
+import {
+  EMAIL_SERVICE_TOKEN,
+  IEmailService,
+} from '../../../../../shared/notifications/domain/email.service.interface';
 
 export type CreateCondominiumResponse = {
   condominium: Condominium;
@@ -27,86 +37,98 @@ export class CreateCondominiumUseCase
   constructor(
     @Inject(CONDOMINIUM_REPOSITORY_TOKEN)
     private readonly condominiumRepository: ICondominiumRepository,
+    @Inject(EMAIL_SERVICE_TOKEN)
+    private readonly emailService: IEmailService,
     private readonly passwordGenerator: PasswordGeneratorService,
-    private readonly prisma: PrismaService, // Injetado para usar transações
   ) {}
 
   async execute(request: Request): Promise<CreateCondominiumResponse> {
     const { managerEmail, ...condominiumData } = request;
 
-    // 1. Verifica se o condomínio (por CNPJ) já existe
-    const existingCondominium = await this.condominiumRepository.findByCnpj(
+    // 1. As validações de negócio preliminares permanecem no caso de uso.
+    const existingByCnpj = await this.condominiumRepository.findByCnpj(
       condominiumData.cnpj,
     );
-    if (existingCondominium) {
+    if (existingByCnpj) {
       throw new ConflictException(
         'A condominium with this CNPJ already exists.',
       );
     }
 
-    // 2. Executa a criação do condomínio e do usuário em uma transação
-    try {
-      let temporaryPassword = '';
-
-      const newCondominium = await this.prisma.$transaction(async (tx) => {
-        // Passo A: Verifica se o e-mail do síndico já está em uso usando o cliente da transação.
-        const existingUser = await tx.user.findUnique({
-          where: { email: managerEmail },
-        });
-        if (existingUser) {
-          throw new ConflictException('Este e-mail de síndico já está em uso.');
-        }
-
-        // Passo B: Cria o condomínio dentro da transação.
-        const createdCondo = await tx.condominium.create({
-          data: condominiumData,
-        });
-
-        // Passo C: Gera e criptografa uma senha temporária para o síndico.
-        temporaryPassword = this.passwordGenerator.generate();
-        const hashedPassword = await bcrypt.hash(
-          temporaryPassword,
-          this.saltRounds,
-        );
-
-        // Passo D: Cria o usuário síndico, associando-o ao condomínio recém-criado.
-        await tx.user.create({
-          data: {
-            email: managerEmail,
-            password: hashedPassword,
-            condominium: {
-              connect: { id: createdCondo.id },
-            },
-          },
-        });
-
-        this.logger.log(
-          `Manager user created for condominium ${createdCondo.id}`,
-        );
-        // TODO: Enviar um e-mail de boas-vindas para o síndico com a senha temporária.
-        // Ex: await this.notificationService.sendWelcomeEmail(managerEmail, temporaryPassword);
-        this.logger.log(
-          `Temporary password for ${managerEmail}: ${temporaryPassword}`,
-        );
-
-        return createdCondo;
-      });
-
-      return {
-        condominium: newCondominium,
-        managerInitialPassword: temporaryPassword,
-      };
-    } catch (error) {
-      this.logger.error(
-        'Transaction failed when creating condominium and manager user',
-        error,
+    if (condominiumData.email) {
+      const existingByEmail = await this.condominiumRepository.findByEmail(
+        condominiumData.email,
       );
-      // Se o erro for de e-mail duplicado vindo do createUserUseCase, relance-o
-      if (error instanceof ConflictException) {
-        throw error;
+      if (existingByEmail) {
+        throw new ConflictException(
+          'A condominium with this contact email already exists.',
+        );
       }
-      // Para outros erros, lance um erro genérico
-      throw new Error('Failed to create condominium and initial manager user.');
     }
+
+    // 2. Prepara os dados necessários para a criação.
+    const temporaryPassword = this.passwordGenerator.generate();
+    const hashedPassword = await bcrypt.hash(
+      temporaryPassword,
+      this.saltRounds,
+    );
+
+    let newCondominium: Condominium;
+
+    // 3. Executa a criação delegando a lógica transacional para o repositório.
+    try {
+      // O método `createWithManager` agora encapsula a transação do Prisma.
+      newCondominium = await this.condominiumRepository.createWithManager(
+        condominiumData,
+        { email: managerEmail, hashedPassword },
+      );
+    } catch (dbError) {
+      const stack = dbError instanceof Error ? dbError.stack : String(dbError);
+      this.logger.error(
+        `[Transaction Failed] Could not create condominium or manager for CNPJ: ${condominiumData.cnpj}`,
+        stack,
+      );
+      // O repositório já lança ConflictException, então apenas a repassamos.
+      if (dbError instanceof ConflictException) {
+        throw dbError;
+      }
+      // Para outros erros, lançamos um erro de servidor mais informativo.
+      throw new InternalServerErrorException(
+        'An internal error occurred while creating the condominium.',
+      );
+    }
+
+    // 4. A operação de efeito colateral (e-mail) ocorre após o sucesso da transação.
+    try {
+      await this.emailService.sendMail({
+        to: managerEmail,
+        subject: `Bem-vindo ao Concierge Control, ${newCondominium.name}!`,
+        template: 'welcome-email',
+        context: {
+          name: newCondominium.name,
+          managerEmail,
+          password: temporaryPassword,
+        },
+      });
+    } catch (emailError) {
+      const stack =
+        emailError instanceof Error ? emailError.stack : String(emailError);
+      // O comportamento de não relançar o erro de e-mail está mantido.
+      this.logger.error(
+        `[EMAIL-FAILURE] Condominium/manager created, but welcome email failed for ${managerEmail}.`,
+        stack,
+      );
+      // Adicionamos um log extra para capturar mais detalhes do erro.
+      this.logger.error(
+        `[EMAIL-FAILURE-DETAILS]`,
+        JSON.stringify(emailError, null, 2),
+      );
+    }
+
+    // 5. Retorna a resposta de sucesso.
+    return {
+      condominium: newCondominium,
+      managerInitialPassword: temporaryPassword,
+    };
   }
 }
