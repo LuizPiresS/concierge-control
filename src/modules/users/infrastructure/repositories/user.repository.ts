@@ -11,9 +11,9 @@ export const USER_REPOSITORY_TOKEN = Symbol('IUserRepository');
 export class UserRepository
   extends GenericRepository<
     User,
-    Prisma.UserWhereUniqueInput,
-    Prisma.UserWhereInput,
-    Prisma.UserCreateInput,
+    Prisma.UserWhereInput, // WhereInput
+    Prisma.UserWhereUniqueInput, // WhereUniqueInput
+    Prisma.UserCreateInput, // CreateInput
     Prisma.UserUpdateInput
   >
   implements IUserRepository

@@ -14,11 +14,11 @@ interface IBaseEntity {
 @Injectable()
 export abstract class GenericRepository<
   T extends IBaseEntity,
-  WhereUniqueInput,
-  WhereInput,
-  CreateInput,
-  UpdateInput,
-  FindManyArgs = Prisma.Args<T, 'findMany'>,
+  WhereInput, // e.g., Prisma.CondominiumWhereInput
+  WhereUniqueInput, // e.g., Prisma.CondominiumWhereUniqueInput
+  CreateInput, // e.g., Prisma.CondominiumCreateInput
+  UpdateInput, // e.g., Prisma.CondominiumUpdateInput
+  FindManyArgs extends { orderBy?: any } = Prisma.Args<T, 'findMany'>,
 > {
   protected constructor(protected readonly prisma: PrismaClient) {}
 
@@ -85,7 +85,7 @@ export abstract class GenericRepository<
     page = 1,
     limit = 10,
     where?: WhereInput,
-    orderBy?: Prisma.Args<T, 'findMany'>['orderBy'],
+    orderBy?: FindManyArgs['orderBy'],
   ): Promise<{ data: T[]; total: number; page: number; limit: number }> {
     const skip = (page - 1) * limit;
 

@@ -10,6 +10,7 @@ type User = {
   password: string;
   isActive: boolean;
   isDeleted: boolean;
+  condominiumId: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -19,14 +20,16 @@ type UserWhereUniqueInput = Prisma.UserWhereUniqueInput;
 type UserWhereInput = Prisma.UserWhereInput;
 type UserCreateInput = Prisma.UserCreateInput;
 type UserUpdateInput = Prisma.UserUpdateInput;
+type UserFindManyArgs = Prisma.UserFindManyArgs;
 
 // Create a concrete implementation of the abstract repository for testing
 class TestUserRepository extends GenericRepository<
   User,
-  UserWhereUniqueInput,
   UserWhereInput,
+  UserWhereUniqueInput,
   UserCreateInput,
-  UserUpdateInput
+  UserUpdateInput,
+  UserFindManyArgs
 > {
   constructor(prisma: PrismaClient) {
     super(prisma);
@@ -47,6 +50,7 @@ describe('GenericRepository', () => {
     password: 'hashedpassword',
     isActive: true,
     isDeleted: false,
+    condominiumId: 'condo-uuid-123',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -66,10 +70,9 @@ describe('GenericRepository', () => {
       const createInput: UserCreateInput = {
         email: 'test@example.com',
         password: 'password123',
+        // MELHORIA: Usa a sintaxe `connect` do Prisma para um mock mais realista.
         condominium: {
-          create: undefined,
-          connectOrCreate: undefined,
-          connect: undefined,
+          connect: { id: 'condo-uuid-123' },
         },
       };
 
@@ -191,7 +194,7 @@ describe('GenericRepository', () => {
 
   describe('findMany', () => {
     it('should call prisma.findMany and return an array of entities', async () => {
-      const options = { where: { isActive: true } };
+      const options: UserFindManyArgs = { where: { isActive: true } };
 
       prismaMock.user.findMany.mockResolvedValue([mockUser] as any);
 

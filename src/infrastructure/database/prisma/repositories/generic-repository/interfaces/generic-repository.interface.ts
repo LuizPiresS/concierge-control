@@ -1,27 +1,40 @@
+import { Prisma } from '@prisma/client';
+
+/**
+ * Define o contrato para um repositório genérico, alinhado com os tipos do Prisma.
+ * Esta é a base para todos os repositórios da aplicação, garantindo consistência.
+ *
+ * @template T - O tipo da entidade do Prisma (ex: `User`).
+ * @template WhereInput - O tipo do filtro de busca (ex: `Prisma.UserWhereInput`).
+ * @template WhereUniqueInput - O tipo do filtro para campos únicos (ex: `Prisma.UserWhereUniqueInput`).
+ * @template CreateInput - O tipo de dado para criação (ex: `Prisma.UserCreateInput`).
+ * @template UpdateInput - O tipo de dado para atualização (ex: `Prisma.UserUpdateInput`).
+ * @template FindManyArgs - O tipo completo dos argumentos para `findMany` (ex: `Prisma.UserFindManyArgs`).
+ */
 export interface IGenericRepository<
-  T,
-  Where,
-  Create,
-  Update,
-  FindManyArgs = any,
+  T, // Entity Type
+  WhereInput, // e.g., Prisma.CondominiumWhereInput
+  WhereUniqueInput, // e.g., Prisma.CondominiumWhereUniqueInput
+  CreateInput, // e.g., Prisma.CondominiumCreateInput
+  UpdateInput, // e.g., Prisma.CondominiumUpdateInput
+  FindManyArgs extends { orderBy?: any } = Prisma.Args<T, 'findMany'>, // e.g., Prisma.CondominiumFindManyArgs
 > {
-  create(data: Create): Promise<T>;
-  findByUnique(where: Where): Promise<T | null>;
-  findOne(where: Where): Promise<T | null>;
-  findAll(tenantId: string): Promise<T[]>;
-  findWithFilters(options: FindManyArgs & { tenantId: string }): Promise<T[]>;
-  update(where: Where, data: Update): Promise<T>;
-  delete(where: Where): Promise<boolean>;
-  softDelete(where: Where): Promise<T>;
-  count(where?: Where): Promise<number>;
-  exists(where: Where): Promise<boolean>;
-  upsert(where: Where, create: Create, update: Update): Promise<T>;
+  // Métodos básicos de CRUD usando filtros únicos
+  create(data: CreateInput): Promise<T>;
+  findByUnique(where: WhereUniqueInput): Promise<T | null>;
+  update(where: WhereUniqueInput, data: UpdateInput): Promise<T>;
+  delete(where: WhereUniqueInput): Promise<boolean>;
+  softDelete(where: WhereUniqueInput): Promise<T>;
+
+  // Métodos de busca que usam filtros mais amplos
+  findFirst(where: WhereInput): Promise<T | null>;
   findMany(options?: FindManyArgs): Promise<T[]>;
-  findFirst(where: Where): Promise<T | null>;
+  count(where?: WhereInput): Promise<number>;
+  exists(where: WhereInput): Promise<boolean>;
   findManyWithPagination(
     page?: number,
     limit?: number,
-    where?: Where,
-    orderBy?: any,
+    where?: WhereInput,
+    orderBy?: FindManyArgs['orderBy'],
   ): Promise<{ data: T[]; total: number; page: number; limit: number }>;
 }
