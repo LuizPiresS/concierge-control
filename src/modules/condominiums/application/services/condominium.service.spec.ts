@@ -12,6 +12,7 @@ import { FindAllCondominiumsUseCase } from '../use-cases/find-all-condominiums/f
 import { UpdateCondominiumResponseDto } from '../../presentation/http/dtos/update-condominium-response.dto';
 import { FindCondominiumUseCase } from '../use-cases/find-condominium/find-condominium.usecase';
 import { NotFoundException } from '@nestjs/common';
+import { RemoveCondominiumUseCase } from '../use-cases/remove-condominium/remove-condominium.usecase';
 
 // Mocks para as dependências
 const mockCreateCondominiumUseCase = {
@@ -26,8 +27,11 @@ const mockFindAllCondominiumsUseCase = {
   execute: jest.fn(),
 };
 
-// --- 2. Crie o mock para o novo caso de uso ---
 const mockFindCondominiumUseCase = {
+  execute: jest.fn(),
+};
+
+const mockRemoveCondominiumUseCase = {
   execute: jest.fn(),
 };
 
@@ -75,6 +79,7 @@ describe('CondominiumService', () => {
   let updateCondominiumUseCase: jest.Mocked<UpdateCondominiumUseCase>;
   let findAllCondominiumsUseCase: jest.Mocked<FindAllCondominiumsUseCase>;
   let findCondominiumUseCase: jest.Mocked<FindCondominiumUseCase>;
+  let removeCondominiumUseCase: jest.Mocked<RemoveCondominiumUseCase>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -92,10 +97,13 @@ describe('CondominiumService', () => {
           provide: FindAllCondominiumsUseCase,
           useValue: mockFindAllCondominiumsUseCase,
         },
-        // --- 4. Forneça o mock que estava faltando ---
         {
           provide: FindCondominiumUseCase,
           useValue: mockFindCondominiumUseCase,
+        },
+        {
+          provide: RemoveCondominiumUseCase,
+          useValue: mockRemoveCondominiumUseCase,
         },
       ],
     }).compile();
@@ -104,8 +112,8 @@ describe('CondominiumService', () => {
     createCondominiumUseCase = module.get(CreateCondominiumUseCase);
     updateCondominiumUseCase = module.get(UpdateCondominiumUseCase);
     findAllCondominiumsUseCase = module.get(FindAllCondominiumsUseCase);
-    // --- 5. Obtenha a instância do novo mock ---
     findCondominiumUseCase = module.get(FindCondominiumUseCase);
+    removeCondominiumUseCase = module.get(RemoveCondominiumUseCase);
 
     jest.clearAllMocks();
   });
@@ -114,7 +122,6 @@ describe('CondominiumService', () => {
     expect(service).toBeDefined();
   });
 
-  // ... (testes para 'create' e 'update' permanecem os mesmos)
   describe('create', () => {
     it('should call the CreateCondominiumUseCase with the correct parameters and return its result', async () => {
       const createDto = { ...validCreateDto };
@@ -177,34 +184,61 @@ describe('CondominiumService', () => {
     });
   });
 
-  // --- 6. Adicione os testes para o novo método 'findOneByCriteria' ---
   describe('findOneByCriteria', () => {
     it('should call the FindCondominiumUseCase and return a single condominium', async () => {
-      // Arrange
       const criteria = { cnpj: '12345678000190' };
       const expectedResult: UpdateCondominiumResponseDto = {
         ...mockCondominiumEntity,
       };
       findCondominiumUseCase.execute.mockResolvedValue(expectedResult);
 
-      // Act
       const result = await service.findOneByCriteria(criteria);
 
-      // Assert
       expect(findCondominiumUseCase.execute).toHaveBeenCalledTimes(1);
       expect(findCondominiumUseCase.execute).toHaveBeenCalledWith(criteria);
       expect(result).toEqual(expectedResult);
     });
 
     it('should propagate errors from the findOneByCriteria use case', async () => {
-      // Arrange
       const criteria = { name: 'Non Existent' };
       const expectedError = new NotFoundException('Condominium not found');
       findCondominiumUseCase.execute.mockRejectedValue(expectedError);
 
-      // Act & Assert
       await expect(service.findOneByCriteria(criteria)).rejects.toThrow(
         expectedError,
+      );
+    });
+  });
+
+  describe('remove', () => {
+    it('should call the RemoveCondominiumUseCase with the correct id', async () => {
+      const condominiumId = 'a-valid-uuid';
+      removeCondominiumUseCase.execute.mockResolvedValue(true);
+
+      await service.remove(condominiumId);
+
+      expect(removeCondominiumUseCase.execute).toHaveBeenCalledWith(
+        condominiumId,
+      );
+      expect(removeCondominiumUseCase.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return true on successful removal', async () => {
+      const condominiumId = 'a-valid-uuid';
+      removeCondominiumUseCase.execute.mockResolvedValue(true);
+
+      const result = await service.remove(condominiumId);
+
+      expect(result).toBe(true);
+    });
+
+    it('should propagate exceptions from the use case', async () => {
+      const condominiumId = 'not-found-id';
+      const error = new NotFoundException('Condominium not found');
+      removeCondominiumUseCase.execute.mockRejectedValue(error);
+
+      await expect(service.remove(condominiumId)).rejects.toThrow(
+        NotFoundException,
       );
     });
   });

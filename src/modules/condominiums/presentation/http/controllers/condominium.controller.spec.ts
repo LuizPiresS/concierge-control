@@ -17,9 +17,9 @@ const mockCondominiumService = {
   update: jest.fn(),
   findAll: jest.fn(),
   findOneByCriteria: jest.fn(),
+  remove: jest.fn(),
 };
 
-// Mock para CondominiumMapper
 const mockCondominiumMapper = {
   entityToResponseDto: jest.fn(),
 };
@@ -148,7 +148,6 @@ describe('CondominiumController', () => {
   describe('findOneBy', () => {
     it('should call the service with the correct criteria and return a condominium', async () => {
       // Arrange
-      // CORREÇÃO: Usamos 'as any' para contornar o erro de tipo do 'criteriaCheck'.
       const query: FindCondominiumQueryDto = { cnpj: '12345678000190' } as any;
       const expectedResult: UpdateCondominiumResponseDto = {
         ...mockCondominiumEntity,
@@ -168,7 +167,6 @@ describe('CondominiumController', () => {
 
     it('should throw an exception if the service throws it', async () => {
       // Arrange
-      // CORREÇÃO: Usamos 'as any' aqui também.
       const query: FindCondominiumQueryDto = {
         name: 'Non Existent Condo',
       } as any;
@@ -217,6 +215,36 @@ describe('CondominiumController', () => {
       expect(mapper.entityToResponseDto).toHaveBeenCalledTimes(1);
 
       expect(result).toEqual(responseDto);
+    });
+  });
+
+  describe('remove', () => {
+    it('should call the service to remove a condominium and return nothing (204 No Content)', async () => {
+      // Arrange
+      const condominiumId = mockCondominiumId;
+      mockCondominiumService.remove.mockResolvedValue(true);
+
+      // Act
+      await controller.remove(condominiumId);
+
+      // Assert
+      expect(service.remove).toHaveBeenCalledWith(condominiumId);
+      expect(service.remove).toHaveBeenCalledTimes(1);
+    });
+
+    it('should propagate NotFoundException if the service throws it', async () => {
+      // Arrange
+      const condominiumId = 'non-existent-id';
+      const error = new NotFoundException(
+        `Condomínio com ID ${condominiumId} não encontrado.`,
+      );
+      mockCondominiumService.remove.mockRejectedValue(error);
+
+      // Act & Assert
+      await expect(controller.remove(condominiumId)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(service.remove).toHaveBeenCalledWith(condominiumId);
     });
   });
 });

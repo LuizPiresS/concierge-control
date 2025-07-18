@@ -11,6 +11,7 @@ import { UpdateCondominiumUseCase } from './application/use-cases/update-condomi
 import { CondominiumMapper } from './application/mappers/condominium.mapper';
 import { FindAllCondominiumsUseCase } from './application/use-cases/find-all-condominiums/find-all-condominiums.usecase';
 import { FindCondominiumUseCase } from './application/use-cases/find-condominium/find-condominium.usecase';
+import { RemoveCondominiumUseCase } from './application/use-cases/remove-condominium/remove-condominium.usecase';
 
 @Module({
   imports: [NotificationsModule],
@@ -25,6 +26,7 @@ import { FindCondominiumUseCase } from './application/use-cases/find-condominium
     UpdateCondominiumUseCase,
     FindAllCondominiumsUseCase,
     FindCondominiumUseCase,
+    RemoveCondominiumUseCase,
     // Mappers
     CondominiumMapper,
     // Repositories

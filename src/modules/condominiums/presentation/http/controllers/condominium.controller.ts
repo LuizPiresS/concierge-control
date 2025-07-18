@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -82,5 +83,17 @@ export class CondominiumController {
     );
 
     return this.condominiumMapper.entityToResponseDto(updatedCondominium);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Soft-deletes a condominium by its ID' })
+  @ApiResponse({
+    status: 204,
+    description: 'The condominium was successfully removed.',
+  })
+  @ApiResponse({ status: 404, description: 'Condominium not found.' })
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.condominiumService.remove(id);
   }
 }
