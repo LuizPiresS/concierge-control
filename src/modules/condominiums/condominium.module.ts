@@ -1,37 +1,34 @@
-// /src/modules/condominiums/condominium.module.ts
-
 import { Module } from '@nestjs/common';
-import { PrismaService } from '../../infrastructure/database/prisma/prisma.service';
-import { UsersModule } from '../users/users.module'; // This import is crucial
 import { CondominiumService } from './application/services/condominium.service';
+import { CondominiumController } from './presentation/http/controllers/condominium.controller';
 import { CreateCondominiumUseCase } from './application/use-cases/create-condominium/create-condominium.usecase';
 import { PrismaCondominiumRepository } from './infrastructure/repositories/prisma-condominium.repository';
-import { CondominiumController } from './presentation/http/controllers/condominium.controller';
-import {
-  USER_REPOSITORY_TOKEN,
-  UserRepository,
-} from '../users/infrastructure/repositories/user.repository';
 import { CONDOMINIUM_REPOSITORY_TOKEN } from './domain/repositories/condominium.repository.interface';
+import { NotificationsModule } from '../../shared/notifications/notifications.module';
+import { PasswordGeneratorService } from '../../shared/utils/password-generator.service';
+import { PrismaService } from '../../infrastructure/database/prisma/prisma.service';
+import { UpdateCondominiumUseCase } from './application/use-cases/update-condominium/update-condominium.usecase';
+import { CondominiumMapper } from './application/mappers/condominium.mapper';
 
 @Module({
   imports: [
-    UsersModule, // Correct: Imports the module that exports CreateUserUseCase
+    NotificationsModule, // <-- A CORREÇÃO PRINCIPAL ESTÁ AQUI
   ],
   controllers: [CondominiumController],
   providers: [
+    // Services
     CondominiumService,
+    PasswordGeneratorService,
+    PrismaService, // Dependência direta do UseCase
+    // Use Cases
     CreateCondominiumUseCase,
-    PrismaService,
+    UpdateCondominiumUseCase, // <-- Adicione aqui
+    CondominiumMapper,
+    // Repositories
     {
       provide: CONDOMINIUM_REPOSITORY_TOKEN,
       useClass: PrismaCondominiumRepository,
     },
-
-    {
-      provide: USER_REPOSITORY_TOKEN,
-      useClass: UserRepository,
-    },
   ],
-  exports: [CondominiumService],
 })
 export class CondominiumsModule {}
