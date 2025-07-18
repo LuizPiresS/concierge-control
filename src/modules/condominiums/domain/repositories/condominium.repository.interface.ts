@@ -5,16 +5,12 @@ export const CONDOMINIUM_REPOSITORY_TOKEN = Symbol('ICondominiumRepository');
 
 export interface ICondominiumRepository
   extends IGenericRepository<
-    Condominium, // T (Entity)
-    Prisma.CondominiumWhereInput, // WhereInput
-    Prisma.CondominiumWhereUniqueInput, // WhereUniqueInput
-    Prisma.CondominiumCreateInput, // CreateInput
-    Prisma.CondominiumUpdateInput, // UpdateInput
-    Prisma.CondominiumFindManyArgs // FindManyArgs
+    Condominium,
+    Prisma.CondominiumWhereInput,
+    Prisma.CondominiumWhereUniqueInput,
+    Prisma.CondominiumCreateInput,
+    Prisma.CondominiumUpdateInput
   > {
-  /**
-   * Finds a condominium by its unique CNPJ.
-   */
   findByCnpj(cnpj: string): Promise<Condominium | null>;
   findByEmail(email: string): Promise<Condominium | null>;
   createWithManager(

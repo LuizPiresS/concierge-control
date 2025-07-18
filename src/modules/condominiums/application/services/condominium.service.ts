@@ -11,6 +11,8 @@ import { FindCondominiumUseCase } from '../use-cases/find-condominium/find-condo
 import { RemoveCondominiumUseCase } from '../use-cases/remove-condominium/remove-condominium.usecase';
 import { UpdateCondominiumUseCase } from '../use-cases/update-condominium/update-condominium.usecase';
 import { UpdateCondominiumResponseDto } from '../../presentation/http/dtos/update-condominium-response.dto';
+import { FindAllCondominiumsQueryDto } from '../../presentation/http/dtos/find-all-condominiums-query.dto';
+import { FindCondominiumQueryDto } from '../../presentation/http/dtos/find-condominium-query.dto';
 
 @Injectable()
 export class CondominiumService {
@@ -38,14 +40,15 @@ export class CondominiumService {
     });
   }
 
-  findAll(): Promise<UpdateCondominiumResponseDto[]> {
-    return this.findAllCondominiumsUseCase.execute();
+  findAll(
+    query: FindAllCondominiumsQueryDto,
+  ): Promise<UpdateCondominiumResponseDto[]> {
+    return this.findAllCondominiumsUseCase.execute(query);
   }
 
-  findOneByCriteria(criteria: {
-    cnpj?: string;
-    name?: string;
-  }): Promise<UpdateCondominiumResponseDto> {
+  findOneByCriteria(
+    criteria: FindCondominiumQueryDto,
+  ): Promise<UpdateCondominiumResponseDto> {
     return this.findCondominiumUseCase.execute(criteria);
   }
 

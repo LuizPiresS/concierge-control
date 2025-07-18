@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { IUseCase } from '../../../../../shared/domain/use-case.interface';
 import {
   CONDOMINIUM_REPOSITORY_TOKEN,
@@ -7,12 +8,17 @@ import {
 import { CondominiumMapper } from '../../mappers/condominium.mapper';
 import { UpdateCondominiumResponseDto } from '../../../presentation/http/dtos/update-condominium-response.dto';
 
-// O caso de uso não recebe parâmetros (void) e retorna uma lista de DTOs de resposta.
+type FindAllCondominiumsRequest = {
+  // Os tipos aqui podem chegar como string ou boolean
+  isActive?: boolean | string;
+  isDeleted?: boolean | string;
+};
+
 type FindAllCondominiumsResponse = UpdateCondominiumResponseDto[];
 
 @Injectable()
 export class FindAllCondominiumsUseCase
-  implements IUseCase<void, FindAllCondominiumsResponse>
+  implements IUseCase<FindAllCondominiumsRequest, FindAllCondominiumsResponse>
 {
   constructor(
     @Inject(CONDOMINIUM_REPOSITORY_TOKEN)
@@ -20,16 +26,25 @@ export class FindAllCondominiumsUseCase
     private readonly condominiumMapper: CondominiumMapper,
   ) {}
 
-  /**
-   * Busca todos os condomínios cadastrados.
-   * @returns Uma lista de condomínios formatada como DTO de resposta.
-   */
-  async execute(): Promise<FindAllCondominiumsResponse> {
-    // 1. Busca todas as entidades do repositório.
-    const condominiums = await this.condominiumRepository.findMany();
+  async execute(
+    request: FindAllCondominiumsRequest,
+  ): Promise<FindAllCondominiumsResponse> {
+    const where: Prisma.CondominiumWhereInput = {};
 
-    // 2. Usa o mapper para converter a lista de entidades em uma lista de DTOs seguros.
-    //    Isso garante que a resposta da API seja consistente e não exponha dados sensíveis.
-    return this.condominiumMapper.entityListToResponseDtoList(condominiums);
+    console.log(request);
+
+    // CORREÇÃO: Converte explicitamente para boolean antes de usar.
+    if (request.isActive !== undefined) {
+      // Compara a string 'true' (ignorando maiúsculas/minúsculas) ou o valor booleano.
+      where.isActive = String(request.isActive).toLowerCase() === 'true';
+    }
+
+    if (request.isDeleted !== undefined) {
+      where.isDeleted = String(request.isDeleted).toLowerCase() === 'true';
+    }
+
+    const condominiums = await this.condominiumRepository.findMany({ where });
+
+    return this.condominiumMapper.entitiesToResponseDto(condominiums);
   }
 }

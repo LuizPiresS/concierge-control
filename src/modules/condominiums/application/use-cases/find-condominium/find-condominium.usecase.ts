@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Condominium } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { IUseCase } from '../../../../../shared/domain/use-case.interface';
 import {
   CONDOMINIUM_REPOSITORY_TOKEN,
@@ -16,6 +16,8 @@ import { UpdateCondominiumResponseDto } from '../../../presentation/http/dtos/up
 type FindCondominiumRequest = {
   cnpj?: string;
   name?: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
 };
 
 type FindCondominiumResponse = UpdateCondominiumResponseDto;
@@ -33,30 +35,41 @@ export class FindCondominiumUseCase
   async execute(
     request: FindCondominiumRequest,
   ): Promise<FindCondominiumResponse> {
-    const { cnpj, name } = request;
+    const { cnpj, name, isActive, isDeleted } = request;
 
-    let condominium: Condominium | null;
-    let criteriaForException: string;
-
-    // REATORAÇÃO: A lógica agora usa um fluxo if/else if, que é mais explícito
-    // e permite que o TypeScript infira os tipos corretamente.
-    if (cnpj) {
-      condominium = await this.condominiumRepository.findFirst({ cnpj });
-      criteriaForException = `CNPJ ${cnpj}`;
-    } else if (name) {
-      // Dentro deste bloco, o TypeScript sabe que 'name' é do tipo 'string'.
-      condominium = await this.condominiumRepository.findFirst({ name });
-      criteriaForException = `nome ${name}`;
-    } else {
-      // Este bloco só é alcançado se nem 'cnpj' nem 'name' forem fornecidos.
+    if (!cnpj && !name) {
       throw new BadRequestException(
         'É necessário fornecer um critério de busca (CNPJ ou nome).',
       );
     }
 
+    const where: Prisma.CondominiumWhereInput = {};
+    let criteriaForException: string;
+
+    if (cnpj) {
+      where.cnpj = cnpj;
+      criteriaForException = `CNPJ ${cnpj}`;
+    } else if (name) {
+      where.name = name;
+      criteriaForException = `nome ${name}`;
+    } else {
+      throw new BadRequestException('Critério de busca inválido.');
+    }
+
+    // Adiciona os filtros de status à query
+    if (isActive !== undefined) {
+      where.isActive = isActive;
+    }
+
+    if (isDeleted !== undefined) {
+      where.isDeleted = isDeleted;
+    }
+
+    const condominium = await this.condominiumRepository.findFirst(where);
+
     if (!condominium) {
       throw new NotFoundException(
-        `Nenhum condomínio encontrado com ${criteriaForException}.`,
+        `Nenhum condomínio encontrado com os critérios fornecidos: ${criteriaForException}.`,
       );
     }
 

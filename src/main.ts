@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'; // Importe
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,9 +11,6 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
     }),
   );
 
@@ -22,11 +19,12 @@ async function bootstrap() {
     .setTitle('Concierge Control API')
     .setDescription('Documentação da API para o sistema Concierge Control')
     .setVersion('1.0')
-    .addTag('users', 'Operações relacionadas a usuários') // Adicione tags para agrupar endpoints
+    .addTag('condominiums', 'Operações relacionadas a condomínios')
+    .addTag('users', 'Operações relacionadas a usuários')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document); // Onde 'api' é a rota para a documentação
+  SwaggerModule.setup('api', app, document);
   // --- Fim da Configuração do Swagger ---
 
   await app.listen(3000);

@@ -5,33 +5,30 @@ import { UpdateCondominiumResponseDto } from '../../presentation/http/dtos/updat
 
 @Injectable()
 export class CondominiumMapper {
-  /**
-   * Converte um UpdateCondominiumDto para o formato de entrada de atualização do Prisma.
-   */
   updateDtoToUpdateInput(
     dto: UpdateCondominiumDto,
   ): Prisma.CondominiumUpdateInput {
-    const { managerEmail: _managerEmail, ...dataToUpdate } = dto;
-    return dataToUpdate;
+    const { managerEmail: _managerEmail, ...updateData } = dto;
+    return updateData;
   }
 
-  /**
-   * Converte uma entidade Condominium para o DTO de resposta da API.
-   */
   entityToResponseDto(entity: Condominium): UpdateCondominiumResponseDto {
-    const responseDto = new UpdateCondominiumResponseDto();
-    Object.assign(responseDto, entity);
-    return responseDto;
+    // CORRECTION: Instantiate the DTO class to ensure the correct type is returned.
+    const dto = new UpdateCondominiumResponseDto();
+    Object.assign(dto, entity);
+    return dto;
   }
 
   /**
    * Converte uma lista de entidades Condominium em uma lista de DTOs de resposta.
-   * @param entities A lista de entidades do banco de dados.
-   * @returns Uma lista de DTOs prontos para a resposta da API.
+   * @param entities Uma lista de entidades Condominium.
+   * @returns Uma lista de DTOs de resposta.
    */
-  entityListToResponseDtoList(
+  entitiesToResponseDto(
     entities: Condominium[],
   ): UpdateCondominiumResponseDto[] {
+    // This method now correctly returns an array of DTO instances
+    // because it calls the fixed entityToResponseDto method.
     return entities.map((entity) => this.entityToResponseDto(entity));
   }
 }

@@ -13,8 +13,9 @@ const mockCondominiumRepository = {
   findMany: jest.fn(),
 };
 
+// CORRECTION: The mock now uses the correct method name from the mapper.
 const mockCondominiumMapper = {
-  entityListToResponseDtoList: jest.fn(),
+  entitiesToResponseDto: jest.fn(),
 };
 
 // Mock de dados para simular o retorno do banco
@@ -80,17 +81,18 @@ describe('FindAllCondominiumsUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should return a list of mapped condominiums', async () => {
+  it('should return a list of mapped condominiums when no filters are provided', async () => {
     // Arrange
     repository.findMany.mockResolvedValue(mockCondominiumEntities);
-    mapper.entityListToResponseDtoList.mockReturnValue(mockCondominiumDtos);
+    mapper.entitiesToResponseDto.mockReturnValue(mockCondominiumDtos);
 
     // Act
-    const result = await useCase.execute();
+    // CORRECTION: Pass an empty object to satisfy the method signature.
+    const result = await useCase.execute({});
 
     // Assert
-    expect(repository.findMany).toHaveBeenCalledTimes(1);
-    expect(mapper.entityListToResponseDtoList).toHaveBeenCalledWith(
+    expect(repository.findMany).toHaveBeenCalledWith({ where: {} });
+    expect(mapper.entitiesToResponseDto).toHaveBeenCalledWith(
       mockCondominiumEntities,
     );
     expect(result).toEqual(mockCondominiumDtos);
@@ -100,15 +102,37 @@ describe('FindAllCondominiumsUseCase', () => {
   it('should return an empty list if no condominiums are found', async () => {
     // Arrange
     repository.findMany.mockResolvedValue([]);
-    mapper.entityListToResponseDtoList.mockReturnValue([]);
+    mapper.entitiesToResponseDto.mockReturnValue([]);
 
     // Act
-    const result = await useCase.execute();
+    // CORRECTION: Pass an empty object.
+    const result = await useCase.execute({});
+
+    // Assert
+    expect(repository.findMany).toHaveBeenCalledWith({ where: {} });
+    expect(mapper.entitiesToResponseDto).toHaveBeenCalledWith([]);
+    expect(result).toEqual([]);
+    expect(result.length).toBe(0);
+  });
+
+  // --- ENHANCEMENT: New test to verify filtering logic ---
+  it('should call the repository with the correct where clause when filters are provided', async () => {
+    // Arrange
+    const filters = { isActive: true, isDeleted: false };
+    repository.findMany.mockResolvedValue([]);
+    mapper.entitiesToResponseDto.mockReturnValue([]);
+
+    // Act
+    await useCase.execute(filters);
 
     // Assert
     expect(repository.findMany).toHaveBeenCalledTimes(1);
-    expect(mapper.entityListToResponseDtoList).toHaveBeenCalledWith([]);
-    expect(result).toEqual([]);
-    expect(result.length).toBe(0);
+    // This is the key assertion: we check if the use case correctly builds the `where` object.
+    expect(repository.findMany).toHaveBeenCalledWith({
+      where: {
+        isActive: true,
+        isDeleted: false,
+      },
+    });
   });
 });

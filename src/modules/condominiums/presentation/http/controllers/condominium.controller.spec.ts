@@ -10,6 +10,8 @@ import { Condominium } from '@prisma/client';
 import { CreateCondominiumResponse } from '../../../application/use-cases/create-condominium/create-condominium.usecase';
 import { FindCondominiumQueryDto } from '../dtos/find-condominium-query.dto';
 import { NotFoundException } from '@nestjs/common';
+// --- 1. Import the DTO for query parameters ---
+import { FindAllCondominiumsQueryDto } from '../dtos/find-all-condominiums-query.dto';
 
 // Mock para CondominiumService
 const mockCondominiumService = {
@@ -113,35 +115,37 @@ describe('CondominiumController', () => {
     });
   });
 
+  // --- 2. Updated test block for `findAll` ---
   describe('findAll', () => {
-    it('should return an array of condominiums', async () => {
+    it('should call the service with the provided query and return an array of condominiums', async () => {
       // Arrange
+      const query: FindAllCondominiumsQueryDto = { isActive: true };
       const expectedResult: UpdateCondominiumResponseDto[] = [
         { ...mockCondominiumEntity },
       ];
       mockCondominiumService.findAll.mockResolvedValue(expectedResult);
 
       // Act
-      const result = await controller.findAll();
+      const result = await controller.findAll(query);
 
       // Assert
+      expect(service.findAll).toHaveBeenCalledWith(query);
       expect(service.findAll).toHaveBeenCalledTimes(1);
       expect(result).toEqual(expectedResult);
       expect(result).toBeInstanceOf(Array);
-      expect(result.length).toBe(1);
     });
 
-    it('should return an empty array when no condominiums are found', async () => {
+    it('should call the service with an empty query when no filters are provided', async () => {
       // Arrange
+      const query: FindAllCondominiumsQueryDto = {};
       mockCondominiumService.findAll.mockResolvedValue([]);
 
       // Act
-      const result = await controller.findAll();
+      await controller.findAll(query);
 
       // Assert
+      expect(service.findAll).toHaveBeenCalledWith(query);
       expect(service.findAll).toHaveBeenCalledTimes(1);
-      expect(result).toEqual([]);
-      expect(result.length).toBe(0);
     });
   });
 

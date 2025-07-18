@@ -108,14 +108,36 @@ describe('FindCondominiumUseCase', () => {
     expect(result).toEqual(mockCondominiumDto);
   });
 
+  it('should find a condominium by name and status filters', async () => {
+    // Arrange
+    repository.findFirst.mockResolvedValue(mockCondominiumEntity);
+    mapper.entityToResponseDto.mockReturnValue(mockCondominiumDto);
+    const criteria = {
+      name: 'Condo Test',
+      isActive: true,
+      isDeleted: false,
+    };
+
+    // Act
+    const result = await useCase.execute(criteria);
+
+    // Assert
+    expect(repository.findFirst).toHaveBeenCalledWith(criteria);
+    expect(mapper.entityToResponseDto).toHaveBeenCalledWith(
+      mockCondominiumEntity,
+    );
+    expect(result).toEqual(mockCondominiumDto);
+  });
+
   it('should throw NotFoundException if no condominium is found', async () => {
     // Arrange
     repository.findFirst.mockResolvedValue(null);
 
     // Act & Assert
+    // CORRECTION: The expected error message is now updated.
     await expect(useCase.execute({ cnpj: 'not-found-cnpj' })).rejects.toThrow(
       new NotFoundException(
-        'Nenhum condomínio encontrado com CNPJ not-found-cnpj.',
+        'Nenhum condomínio encontrado com os critérios fornecidos: CNPJ not-found-cnpj.',
       ),
     );
   });

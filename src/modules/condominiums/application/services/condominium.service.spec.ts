@@ -13,6 +13,9 @@ import { UpdateCondominiumResponseDto } from '../../presentation/http/dtos/updat
 import { FindCondominiumUseCase } from '../use-cases/find-condominium/find-condominium.usecase';
 import { NotFoundException } from '@nestjs/common';
 import { RemoveCondominiumUseCase } from '../use-cases/remove-condominium/remove-condominium.usecase';
+// --- 1. Import the DTOs needed for testing ---
+import { FindAllCondominiumsQueryDto } from '../../presentation/http/dtos/find-all-condominiums-query.dto';
+import { FindCondominiumQueryDto } from '../../presentation/http/dtos/find-condominium-query.dto';
 
 // Mocks para as dependências
 const mockCreateCondominiumUseCase = {
@@ -162,31 +165,40 @@ describe('CondominiumService', () => {
     });
   });
 
+  // --- 2. Updated test block for `findAll` ---
   describe('findAll', () => {
-    it('should call the FindAllCondominiumsUseCase and return a list of condominiums', async () => {
+    it('should call the FindAllCondominiumsUseCase with the provided query', async () => {
+      const query: FindAllCondominiumsQueryDto = { isActive: true };
       const expectedResult: UpdateCondominiumResponseDto[] = [
         { ...mockCondominiumEntity },
       ];
       findAllCondominiumsUseCase.execute.mockResolvedValue(expectedResult);
 
-      const result = await service.findAll();
+      const result = await service.findAll(query);
 
       expect(findAllCondominiumsUseCase.execute).toHaveBeenCalledTimes(1);
-      expect(findAllCondominiumsUseCase.execute).toHaveBeenCalledWith();
+      expect(findAllCondominiumsUseCase.execute).toHaveBeenCalledWith(query);
       expect(result).toEqual(expectedResult);
     });
 
-    it('should return an empty array if the use case finds no condominiums', async () => {
+    it('should call the use case with an empty query if no filters are provided', async () => {
+      const query: FindAllCondominiumsQueryDto = {};
       findAllCondominiumsUseCase.execute.mockResolvedValue([]);
-      const result = await service.findAll();
+
+      const result = await service.findAll(query);
+
       expect(findAllCondominiumsUseCase.execute).toHaveBeenCalledTimes(1);
+      expect(findAllCondominiumsUseCase.execute).toHaveBeenCalledWith(query);
       expect(result).toEqual([]);
     });
   });
 
+  // --- 3. Updated test block for `findOneByCriteria` ---
   describe('findOneByCriteria', () => {
     it('should call the FindCondominiumUseCase and return a single condominium', async () => {
-      const criteria = { cnpj: '12345678000190' };
+      const criteria = {
+        cnpj: '12345678000190',
+      } as FindCondominiumQueryDto; // Cast to satisfy TypeScript
       const expectedResult: UpdateCondominiumResponseDto = {
         ...mockCondominiumEntity,
       };
@@ -200,7 +212,7 @@ describe('CondominiumService', () => {
     });
 
     it('should propagate errors from the findOneByCriteria use case', async () => {
-      const criteria = { name: 'Non Existent' };
+      const criteria = { name: 'Non Existent' } as FindCondominiumQueryDto; // Cast to satisfy TypeScript
       const expectedError = new NotFoundException('Condominium not found');
       findCondominiumUseCase.execute.mockRejectedValue(expectedError);
 

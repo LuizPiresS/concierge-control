@@ -18,6 +18,7 @@ import { UpdateCondominiumResponseDto } from '../dtos/update-condominium-respons
 import { CondominiumMapper } from '../../../application/mappers/condominium.mapper';
 import { FindCondominiumQueryDto } from '../dtos/find-condominium-query.dto';
 import { CreateCondominiumDto } from '../dtos/create-condominium.dto';
+import { FindAllCondominiumsQueryDto } from '../dtos/find-all-condominiums-query.dto';
 
 @ApiTags('condominiums')
 @Controller('condominiums')
@@ -44,23 +45,28 @@ export class CondominiumController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Lists all condominiums' })
+  @ApiOperation({ summary: 'Lists all condominiums with optional filters' })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
+  @ApiQuery({ name: 'isDeleted', required: false, type: Boolean })
   @ApiResponse({
     status: 200,
     description: 'List of condominiums returned successfully.',
     type: [UpdateCondominiumResponseDto],
   })
-  findAll() {
-    return this.condominiumService.findAll();
+  findAll(@Query() query: FindAllCondominiumsQueryDto) {
+    return this.condominiumService.findAll(query);
   }
 
   @Get('find')
   @ApiOperation({
-    summary: 'Finds a single condominium by CNPJ or name',
-    description: 'Provide either a CNPJ or a name as a query parameter.',
+    summary: 'Finds a single condominium by CNPJ or name with optional filters',
+    description:
+      'Provide either a CNPJ or a name, and optionally filter by active/deleted status.',
   })
   @ApiQuery({ name: 'cnpj', required: false, type: String })
   @ApiQuery({ name: 'name', required: false, type: String })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
+  @ApiQuery({ name: 'isDeleted', required: false, type: Boolean })
   @ApiResponse({
     status: 200,
     description: 'Condominium found successfully.',

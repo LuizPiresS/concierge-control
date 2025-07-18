@@ -8,8 +8,8 @@ import { PrismaService } from '../../../../infrastructure/database/prisma/prisma
 export class PrismaCondominiumRepository
   extends GenericRepository<
     Condominium,
-    Prisma.CondominiumWhereInput, // WhereInput
-    Prisma.CondominiumWhereUniqueInput, // WhereUniqueInput
+    Prisma.CondominiumWhereInput,
+    Prisma.CondominiumWhereUniqueInput,
     Prisma.CondominiumCreateInput,
     Prisma.CondominiumUpdateInput,
     Prisma.CondominiumFindManyArgs
