@@ -10,6 +10,7 @@ import { PrismaService } from '../../infrastructure/database/prisma/prisma.servi
 import { UpdateCondominiumUseCase } from './application/use-cases/update-condominium/update-condominium.usecase';
 import { CondominiumMapper } from './application/mappers/condominium.mapper';
 import { FindAllCondominiumsUseCase } from './application/use-cases/find-all-condominiums/find-all-condominiums.usecase';
+import { FindCondominiumUseCase } from './application/use-cases/find-condominium/find-condominium.usecase';
 
 @Module({
   imports: [NotificationsModule],
@@ -23,6 +24,7 @@ import { FindAllCondominiumsUseCase } from './application/use-cases/find-all-con
     CreateCondominiumUseCase,
     UpdateCondominiumUseCase,
     FindAllCondominiumsUseCase,
+    FindCondominiumUseCase,
     // Mappers
     CondominiumMapper,
     // Repositories

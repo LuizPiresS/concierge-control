@@ -8,21 +8,21 @@ import { v4 as uuidv4 } from 'uuid';
 import { UpdateCondominiumResponseDto } from '../dtos/update-condominium-response.dto';
 import { Condominium } from '@prisma/client';
 import { CreateCondominiumResponse } from '../../../application/use-cases/create-condominium/create-condominium.usecase';
+import { FindCondominiumQueryDto } from '../dtos/find-condominium-query.dto';
+import { NotFoundException } from '@nestjs/common';
 
 // Mock para CondominiumService
 const mockCondominiumService = {
   create: jest.fn(),
   update: jest.fn(),
-  // --- 1. Adicione o método findAll ao mock ---
   findAll: jest.fn(),
+  findOneByCriteria: jest.fn(),
 };
 
 // Mock para CondominiumMapper
 const mockCondominiumMapper = {
   entityToResponseDto: jest.fn(),
 };
-
-// --- Mock de dados completos para reutilização ---
 
 const mockCondominiumId = uuidv4();
 
@@ -38,7 +38,6 @@ const mockCreateDto: CreateCondominiumDto = {
   zipCode: '12345678',
 };
 
-// Mock completo da entidade Condominium que seria retornada pelo serviço.
 const mockCondominiumEntity: Condominium = {
   id: mockCondominiumId,
   name: 'Solaris',
@@ -114,7 +113,6 @@ describe('CondominiumController', () => {
     });
   });
 
-  // --- 2. -- 'findAll' ---
   describe('findAll', () => {
     it('should return an array of condominiums', async () => {
       // Arrange
@@ -144,6 +142,44 @@ describe('CondominiumController', () => {
       expect(service.findAll).toHaveBeenCalledTimes(1);
       expect(result).toEqual([]);
       expect(result.length).toBe(0);
+    });
+  });
+
+  describe('findOneBy', () => {
+    it('should call the service with the correct criteria and return a condominium', async () => {
+      // Arrange
+      // CORREÇÃO: Usamos 'as any' para contornar o erro de tipo do 'criteriaCheck'.
+      const query: FindCondominiumQueryDto = { cnpj: '12345678000190' } as any;
+      const expectedResult: UpdateCondominiumResponseDto = {
+        ...mockCondominiumEntity,
+      };
+      mockCondominiumService.findOneByCriteria.mockResolvedValue(
+        expectedResult,
+      );
+
+      // Act
+      const result = await controller.findOneBy(query);
+
+      // Assert
+      expect(service.findOneByCriteria).toHaveBeenCalledWith(query);
+      expect(service.findOneByCriteria).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(expectedResult);
+    });
+
+    it('should throw an exception if the service throws it', async () => {
+      // Arrange
+      // CORREÇÃO: Usamos 'as any' aqui também.
+      const query: FindCondominiumQueryDto = {
+        name: 'Non Existent Condo',
+      } as any;
+      const error = new NotFoundException('Condominium not found.');
+      mockCondominiumService.findOneByCriteria.mockRejectedValue(error);
+
+      // Act & Assert
+      await expect(controller.findOneBy(query)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(service.findOneByCriteria).toHaveBeenCalledWith(query);
     });
   });
 

@@ -8,14 +8,15 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CondominiumService } from '../../../application/services/condominium.service';
-import { CreateCondominiumResponseDto } from '../dtos/create-condominium-response.dto';
-import { CreateCondominiumDto } from '../dtos/create-condominium.dto';
 import { UpdateCondominiumDto } from '../dtos/update-condominium.dto';
 import { UpdateCondominiumResponseDto } from '../dtos/update-condominium-response.dto';
 import { CondominiumMapper } from '../../../application/mappers/condominium.mapper';
+import { FindCondominiumQueryDto } from '../dtos/find-condominium-query.dto';
+import { CreateCondominiumDto } from '../dtos/create-condominium.dto';
 
 @ApiTags('condominiums')
 @Controller('condominiums')
@@ -30,7 +31,6 @@ export class CondominiumController {
   @ApiOperation({ summary: 'Creates a new condominium' })
   @ApiResponse({
     status: 201,
-    type: CreateCondominiumResponseDto,
     description: 'The condominium was created successfully.',
   })
   @ApiResponse({ status: 400, description: 'Invalid parameters.' })
@@ -42,7 +42,6 @@ export class CondominiumController {
     return this.condominiumService.create(createCondominiumDto);
   }
 
-  // --- 2.  listar todos os condomínios ---
   @Get()
   @ApiOperation({ summary: 'Lists all condominiums' })
   @ApiResponse({
@@ -54,18 +53,25 @@ export class CondominiumController {
     return this.condominiumService.findAll();
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Updates an existing condominium' })
+  @Get('find')
+  @ApiOperation({
+    summary: 'Finds a single condominium by CNPJ or name',
+    description: 'Provide either a CNPJ or a name as a query parameter.',
+  })
+  @ApiQuery({ name: 'cnpj', required: false, type: String })
+  @ApiQuery({ name: 'name', required: false, type: String })
   @ApiResponse({
     status: 200,
-    description: 'The condominium was updated successfully.',
+    description: 'Condominium found successfully.',
     type: UpdateCondominiumResponseDto,
   })
+  @ApiResponse({ status: 400, description: 'Missing search criteria.' })
   @ApiResponse({ status: 404, description: 'Condominium not found.' })
-  @ApiResponse({
-    status: 409,
-    description: 'Conflict with existing data (e.g., CNPJ).',
-  })
+  findOneBy(@Query() query: FindCondominiumQueryDto) {
+    return this.condominiumService.findOneByCriteria(query);
+  }
+
+  @Patch(':id')
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateCondominiumDto: UpdateCondominiumDto,
