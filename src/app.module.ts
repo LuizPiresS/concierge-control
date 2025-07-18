@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
 import { UsersModule } from './modules/users/users.module';
-import { CondominiumsModule } from './modules/condominiums/condominiums.module';
+import { CondominiumModule } from './modules/condominiums/condominium.module';
 import { NotificationsModule } from './shared/notifications/notifications.module';
 import { PrismaModule } from './infrastructure/database/prisma/prisma.module';
 
@@ -22,7 +22,7 @@ import { PrismaModule } from './infrastructure/database/prisma/prisma.module';
     }),
     PrismaModule, // Assumindo que você tem um PrismaModule global
     UsersModule,
-    CondominiumsModule, // <-- REGISTRANDO O NOVO MÓDULO
+    CondominiumModule, // <-- REGISTRANDO O NOVO MÓDULO
     NotificationsModule,
   ],
   controllers: [],

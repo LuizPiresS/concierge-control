@@ -31,4 +31,4 @@ import { CondominiumMapper } from './application/mappers/condominium.mapper';
     },
   ],
 })
-export class CondominiumsModule {}
+export class CondominiumModule {}
