@@ -9,6 +9,10 @@ export class PasswordGeneratorService {
    * @returns A random string.
    */
   generate(length = 12): string {
+    if (length <= 0) {
+      return '';
+    }
+
     // Gera uma senha forte com letras maiúsculas, minúsculas, números e símbolos.
     const charset =
       'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=';
