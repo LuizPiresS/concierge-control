@@ -6,25 +6,38 @@ import {
   CreateCondominiumResponse,
   CreateCondominiumUseCase,
 } from '../use-cases/create-condominium/create-condominium.usecase';
+// --- 1. Importe o novo caso de uso ---
+import { FindAllCondominiumsUseCase } from '../use-cases/find-all-condominiums/find-all-condominiums.usecase';
 import { UpdateCondominiumUseCase } from '../use-cases/update-condominium/update-condominium.usecase';
+import { UpdateCondominiumResponseDto } from '../../presentation/http/dtos/update-condominium-response.dto';
 
 @Injectable()
 export class CondominiumService {
   constructor(
     private readonly createCondominiumUseCase: CreateCondominiumUseCase,
-    // 1. Injete o caso de uso de atualização
     private readonly updateCondominiumUseCase: UpdateCondominiumUseCase,
+    // --- 2. Injete o novo caso de uso ---
+    private readonly findAllCondominiumsUseCase: FindAllCondominiumsUseCase,
   ) {}
 
-  create(dto: CreateCondominiumDto): Promise<CreateCondominiumResponse> {
-    return this.createCondominiumUseCase.execute(dto);
+  create(
+    createCondominiumDto: CreateCondominiumDto,
+  ): Promise<CreateCondominiumResponse> {
+    return this.createCondominiumUseCase.execute(createCondominiumDto);
   }
 
-  // 2. Implemente o método de atualização, delegando para o caso de uso
-  update(id: string, dto: UpdateCondominiumDto): Promise<Condominium> {
+  update(
+    id: string,
+    updateCondominiumDto: UpdateCondominiumDto,
+  ): Promise<Condominium> {
     return this.updateCondominiumUseCase.execute({
       id,
-      dto,
+      dto: updateCondominiumDto,
     });
+  }
+
+  // --- 3. Implemente o método de listagem, delegando para o caso de uso ---
+  findAll(): Promise<UpdateCondominiumResponseDto[]> {
+    return this.findAllCondominiumsUseCase.execute();
   }
 }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -41,6 +42,18 @@ export class CondominiumController {
     return this.condominiumService.create(createCondominiumDto);
   }
 
+  // --- 2.  listar todos os condomínios ---
+  @Get()
+  @ApiOperation({ summary: 'Lists all condominiums' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of condominiums returned successfully.',
+    type: [UpdateCondominiumResponseDto],
+  })
+  findAll() {
+    return this.condominiumService.findAll();
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Updates an existing condominium' })
   @ApiResponse({
@@ -53,18 +66,15 @@ export class CondominiumController {
     status: 409,
     description: 'Conflict with existing data (e.g., CNPJ).',
   })
-  // 2. O método agora é 'async' e o tipo de retorno é o DTO de resposta.
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateCondominiumDto: UpdateCondominiumDto,
   ): Promise<UpdateCondominiumResponseDto> {
-    // 3. Chamamos o serviço para obter a entidade atualizada do banco.
     const updatedCondominium = await this.condominiumService.update(
       id,
       updateCondominiumDto,
     );
 
-    // 4. Usa o mapper para converter a entidade em um DTO de resposta antes de retornar.
     return this.condominiumMapper.entityToResponseDto(updatedCondominium);
   }
 }

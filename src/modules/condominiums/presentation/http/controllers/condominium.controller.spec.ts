@@ -6,7 +6,6 @@ import { CreateCondominiumDto } from '../dtos/create-condominium.dto';
 import { UpdateCondominiumDto } from '../dtos/update-condominium.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { UpdateCondominiumResponseDto } from '../dtos/update-condominium-response.dto';
-// CORREÇÃO 1: A entidade Condominium é importada do Prisma Client.
 import { Condominium } from '@prisma/client';
 import { CreateCondominiumResponse } from '../../../application/use-cases/create-condominium/create-condominium.usecase';
 
@@ -14,6 +13,8 @@ import { CreateCondominiumResponse } from '../../../application/use-cases/create
 const mockCondominiumService = {
   create: jest.fn(),
   update: jest.fn(),
+  // --- 1. Adicione o método findAll ao mock ---
+  findAll: jest.fn(),
 };
 
 // Mock para CondominiumMapper
@@ -25,7 +26,6 @@ const mockCondominiumMapper = {
 
 const mockCondominiumId = uuidv4();
 
-// CORREÇÃO 2: Mock completo e válido para o CreateCondominiumDto.
 const mockCreateDto: CreateCondominiumDto = {
   name: 'Solaris',
   cnpj: '12345678000190',
@@ -114,6 +114,39 @@ describe('CondominiumController', () => {
     });
   });
 
+  // --- 2. -- 'findAll' ---
+  describe('findAll', () => {
+    it('should return an array of condominiums', async () => {
+      // Arrange
+      const expectedResult: UpdateCondominiumResponseDto[] = [
+        { ...mockCondominiumEntity },
+      ];
+      mockCondominiumService.findAll.mockResolvedValue(expectedResult);
+
+      // Act
+      const result = await controller.findAll();
+
+      // Assert
+      expect(service.findAll).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(expectedResult);
+      expect(result).toBeInstanceOf(Array);
+      expect(result.length).toBe(1);
+    });
+
+    it('should return an empty array when no condominiums are found', async () => {
+      // Arrange
+      mockCondominiumService.findAll.mockResolvedValue([]);
+
+      // Act
+      const result = await controller.findAll();
+
+      // Assert
+      expect(service.findAll).toHaveBeenCalledTimes(1);
+      expect(result).toEqual([]);
+      expect(result.length).toBe(0);
+    });
+  });
+
   describe('update', () => {
     it('should update an existing condominium and return a response DTO', async () => {
       // Arrange
@@ -128,7 +161,6 @@ describe('CondominiumController', () => {
         updatedAt: new Date(),
       };
 
-      // CORREÇÃO 3: O DTO de resposta agora é um objeto completo e válido.
       const responseDto: UpdateCondominiumResponseDto = {
         ...updatedCondominiumEntity,
       };

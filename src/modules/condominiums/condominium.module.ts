@@ -9,20 +9,21 @@ import { PasswordGeneratorService } from '../../shared/utils/password-generator.
 import { PrismaService } from '../../infrastructure/database/prisma/prisma.service';
 import { UpdateCondominiumUseCase } from './application/use-cases/update-condominium/update-condominium.usecase';
 import { CondominiumMapper } from './application/mappers/condominium.mapper';
+import { FindAllCondominiumsUseCase } from './application/use-cases/find-all-condominiums/find-all-condominiums.usecase';
 
 @Module({
-  imports: [
-    NotificationsModule, // <-- A CORREÇÃO PRINCIPAL ESTÁ AQUI
-  ],
+  imports: [NotificationsModule],
   controllers: [CondominiumController],
   providers: [
     // Services
     CondominiumService,
     PasswordGeneratorService,
-    PrismaService, // Dependência direta do UseCase
+    PrismaService,
     // Use Cases
     CreateCondominiumUseCase,
-    UpdateCondominiumUseCase, // <-- Adicione aqui
+    UpdateCondominiumUseCase,
+    FindAllCondominiumsUseCase,
+    // Mappers
     CondominiumMapper,
     // Repositories
     {

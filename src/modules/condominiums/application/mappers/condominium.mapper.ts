@@ -17,18 +17,21 @@ export class CondominiumMapper {
 
   /**
    * Converte uma entidade Condominium para o DTO de resposta da API.
-   * Garante que a resposta da API siga um contrato definido e não exponha
-   * detalhes internos da entidade.
-   * @param entity A entidade Condominium vinda do banco de dados.
-   * @returns Um objeto UpdateCondominiumResponseDto.
    */
   entityToResponseDto(entity: Condominium): UpdateCondominiumResponseDto {
-    // Como o DTO de resposta já tem a estrutura correta, podemos simplesmente
-    // criar uma nova instância a partir da entidade para garantir a tipagem.
-    // Se o DTO fosse diferente da entidade, aqui seria o lugar para mapear
-    // campo por campo.
     const responseDto = new UpdateCondominiumResponseDto();
     Object.assign(responseDto, entity);
     return responseDto;
+  }
+
+  /**
+   * Converte uma lista de entidades Condominium em uma lista de DTOs de resposta.
+   * @param entities A lista de entidades do banco de dados.
+   * @returns Uma lista de DTOs prontos para a resposta da API.
+   */
+  entityListToResponseDtoList(
+    entities: Condominium[],
+  ): UpdateCondominiumResponseDto[] {
+    return entities.map((entity) => this.entityToResponseDto(entity));
   }
 }
